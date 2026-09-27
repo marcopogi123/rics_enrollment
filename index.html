@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Redeemed in Christ School - Enrollment Portal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --rics-navy: #0e1b38;
+            --rics-blue: #1d4ed8;
+            --rics-accent: #2563eb;
+            --rics-light-bg: #f4f8fc;
+            --rics-card-border: #e2e8f0;
+            --rics-footer-bg: #091124;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #fff; color: #1e293b; margin: 0; }
+        .hero-section { background-color: var(--rics-light-bg); padding: 75px 0 85px; border-bottom: 1px solid #e2e8f0; }
+        .hero-title { font-size: 2.75rem; font-weight: 800; line-height: 1.15; color: var(--rics-navy); }
+        .hero-badge { color: #3b82f6; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block; margin-bottom: 12px; }
+        .feature-card { border: 1px solid var(--rics-card-border); border-radius: 16px; padding: 32px 24px; background: #fff; height: 100%; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+        .cta-banner { background-color: var(--rics-navy); border-radius: 20px; padding: 42px 48px; color: #fff; }
+        .btn-rics-primary { background-color: var(--rics-accent); color: #fff; font-weight: 600; border-radius: 50px; padding: 10px 24px; border: none; }
+        .btn-rics-primary:hover { background-color: var(--rics-blue); color: #fff; }
+        .schedule-table th, .schedule-table td { border: 1px solid #cbd5e1; text-align: center; vertical-align: middle; font-size: 0.82rem; padding: 8px; }
+        .schedule-table th { background-color: #3b82f6; color: white; }
+        .badge-status { font-weight: 700; font-size: 0.78rem; padding: 6px 12px; border-radius: 6px; }
+        .badge-pending { background-color: #06b6d4; color: #fff; }
+        .badge-verified { background-color: #10b981; color: #fff; }
+        .step-pill { width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; background-color: #e2e8f0; color: #475569; }
+        .step-pill.active { background-color: var(--rics-accent); color: white; }
+        .req-tab-btn { transition: all 0.2s ease-in-out; border-radius: 50px; }
+        .card-custom { border-radius: 16px; border: 1px solid #e2e8f0; }
+        .analytics-metric-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 20px; }
+        .footer { background-color: var(--rics-footer-bg); color: #94a3b8; padding: 60px 0 30px; font-size: 0.88rem; }
+        .footer h6 { color: #fff; font-weight: 700; font-size: 0.95rem; margin-bottom: 16px; }
+        .footer a { color: #94a3b8; text-decoration: none; display: block; margin-bottom: 8px; }
+        .footer a:hover { color: #fff; }
+        @media print {
+            .navbar, .footer, .btn, .no-print { display: none !important; }
+            .card { border: none !important; box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center font-weight-bold text-dark" href="#" onclick="showSection('home-view')">
+                <img src="rics-logo.png" alt="RICS Logo" style="height: 48px; width: 48px; object-fit: contain; margin-right: 12px;">
+                <div>
+                    <span class="d-block text-primary" style="font-size:1.05rem; font-weight: 700; line-height: 1;">Redeemed In Christ</span>
+                    <small class="text-muted" style="font-size:0.7rem; letter-spacing:0.04em;">SCHOOL ENROLLMENT PORTAL</small>
+                </div>
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link font-weight-medium" href="#" onclick="showSection('home-view')">Home</a></li>
+                    <li class="nav-item"><a class="nav-link font-weight-medium" href="#" onclick="showSection('requirements-view')">Admission Requirements</a></li>
+                    <li class="nav-item"><a class="nav-link font-weight-medium" href="#" onclick="showSection('enrollment-wizard')">Enrollment</a></li>
+                    <li class="nav-item"><a class="nav-link font-weight-medium" href="#contact-footer">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link font-weight-medium" href="#contact-footer">Contact Us</a></li>
+                </ul>
+                <div class="form-inline" id="nav-auth-slot">
+                    <button class="btn btn-outline-dark rounded-pill px-4" onclick="openLoginModal()">Login</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 1. HOME VIEW -->
+    <section id="home-view">
+        <div class="hero-section">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6 mb-4 mb-lg-0">
+                        <span class="hero-badge">Enrollment for Academic Year 2026-2027 now open</span>
+                        <h1 class="hero-title mb-3">Faith-centered education for a redeemed generation</h1>
+                        <p class="text-secondary mb-4" style="line-height: 1.6;">Redeemed in Christ School blends academic excellence with Christian formation, guiding students from Kindergarten through Junior High School toward purpose and character.</p>
+                        <button class="btn btn-rics-primary" onclick="showSection('requirements-view')">View Requirements &rarr;</button>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 20px;">
+                            <img src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1200&q=80" alt="School Facility" class="img-fluid" style="height:330px; width:100%; object-fit:cover;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container py-5 my-3">
+            <div class="text-center mb-5">
+                <h3 class="font-weight-bold" style="color:var(--rics-navy);">Why families choose us</h3>
+                <p class="text-muted">Every part of the school day is designed to grow minds and character together.</p>
+            </div>
+            <div class="row mb-5">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div class="feature-card">
+                        <div class="mb-3 text-primary" style="font-size: 2rem;">📖</div>
+                        <h5 class="font-weight-bold">Christ-centered curriculum</h5>
+                        <p class="text-muted small mb-0">Bible instruction and Christian values are woven into every subject, from Kindergarten through Junior High.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div class="feature-card">
+                        <div class="mb-3 text-primary" style="font-size: 2rem;">👥</div>
+                        <h5 class="font-weight-bold">Maximum 30 students per section</h5>
+                        <p class="text-muted small mb-0">Strict class sizes ensure focused attention, meaningful mentoring, and room for every learner to thrive.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="mb-3 text-primary" style="font-size: 2rem;">🌱</div>
+                        <h5 class="font-weight-bold">Whole-child formation</h5>
+                        <p class="text-muted small mb-0">Academics, character, and community service work together to shape confident, compassionate graduates.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cta-banner d-flex justify-content-between align-items-center flex-wrap">
+                <div class="mb-3 mb-md-0">
+                    <h4 class="font-weight-bold mb-1">Ready to begin the enrollment journey?</h4>
+                    <p class="mb-0 text-white-50 small">Submit an inquiry today and our admissions team will respond promptly.</p>
+                </div>
+                <button class="btn btn-primary btn-rics-primary px-4" onclick="showSection('enrollment-wizard')">Start Inquiry</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. ADMISSION REQUIREMENTS VIEW -->
+    <section id="requirements-view" class="d-none py-5">
+        <div class="container">
+            <span class="text-primary font-weight-bold small text-uppercase">Academic Year 2026-2027</span>
+            <h2 class="font-weight-bold mb-2" style="color:var(--rics-navy);">Admission requirements</h2>
+            <p class="text-muted mb-4">Everything you need to prepare before applying, organized by grade level.</p>
+
+            <div class="mb-4">
+                <button type="button" class="btn btn-dark px-4 btn-sm req-tab-btn mr-1 mb-1" id="btn-tab-preschool" onclick="switchReqTab('preschool')">Preschool</button>
+                <button type="button" class="btn btn-outline-secondary px-4 btn-sm req-tab-btn mr-1 mb-1" id="btn-tab-kinder" onclick="switchReqTab('kinder')">Kindergarten</button>
+                <button type="button" class="btn btn-outline-secondary px-4 btn-sm req-tab-btn mr-1 mb-1" id="btn-tab-elementary" onclick="switchReqTab('elementary')">Elementary (Grades 1-6)</button>
+                <button type="button" class="btn btn-outline-secondary px-4 btn-sm req-tab-btn mr-1 mb-1" id="btn-tab-junior" onclick="switchReqTab('junior')">Junior High (Grades 7-10)</button>
+                <button type="button" class="btn btn-outline-secondary px-4 btn-sm req-tab-btn mr-1 mb-1" id="btn-tab-transferee" onclick="switchReqTab('transferee')">Transferee</button>
+            </div>
+
+            <div class="card card-custom p-4 shadow-sm mb-5" style="max-width:560px;">
+                <h6 class="font-weight-bold mb-3" id="req-tab-title">Preschool - Documents to submit</h6>
+                <ul class="list-unstyled mb-0 small" id="req-checklist-container">
+                    <li class="mb-2"><span class="text-success mr-2 font-weight-bold">✔</span> PSA-issued birth certificate (original + photocopy)</li>
+                    <li class="mb-2"><span class="text-success mr-2 font-weight-bold">✔</span> 2 pieces 2x2 recent ID photos</li>
+                    <li class="mb-2"><span class="text-success mr-2 font-weight-bold">✔</span> Child's immunization / medical record</li>
+                    <li class="mb-2"><span class="text-success mr-2 font-weight-bold">✔</span> Parent's valid government-issued ID</li>
+                </ul>
+            </div>
+
+            <div class="text-center mb-4">
+                <h4 class="font-weight-bold">How the admission process works</h4>
+                <p class="text-muted small">Five simple steps from inquiry to confirmed enrollment.</p>
+            </div>
+            <div class="row text-left mb-5">
+                <div class="col-md mb-3"><div class="card card-custom h-100 p-3"><b class="text-primary" style="font-size: 1.25rem;">01</b><p class="small text-muted mb-0 mt-2">Inquire about enrollment.</p></div></div>
+                <div class="col-md mb-3"><div class="card card-custom h-100 p-3"><b class="text-primary" style="font-size: 1.25rem;">02</b><p class="small text-muted mb-0 mt-2">Take assessment (Average of 80+ exempt).</p></div></div>
+                <div class="col-md mb-3"><div class="card card-custom h-100 p-3"><b class="text-primary" style="font-size: 1.25rem;">03</b><p class="small text-muted mb-0 mt-2">Fill out student registration form.</p></div></div>
+                <div class="col-md mb-3"><div class="card card-custom h-100 p-3"><b class="text-primary" style="font-size: 1.25rem;">04</b><p class="small text-muted mb-0 mt-2">Pay tuition fee with 4 modes of payment.</p></div></div>
+                <div class="col-md mb-3"><div class="card card-custom h-100 p-3"><b class="text-primary" style="font-size: 1.25rem;">05</b><p class="small text-muted mb-0 mt-2">Submit required documents.</p></div></div>
+            </div>
+
+            <div class="cta-banner d-flex justify-content-between align-items-center flex-wrap">
+                <div class="mb-3 mb-md-0">
+                    <h5 class="font-weight-bold mb-0">Have your documents ready?</h5>
+                    <small class="text-white-50">Start your enrollment application now — it takes about 10 minutes.</small>
+                </div>
+                <button class="btn btn-primary px-4" style="border-radius: 50px;" onclick="showSection('enrollment-wizard')">Proceed to Enrollment</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. ENROLLMENT WIZARD -->
+    <section id="enrollment-wizard" class="d-none py-5">
+        <div class="container" style="max-width: 820px;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <span class="text-primary font-weight-bold small text-uppercase">Academic Year 2026-2027</span>
+                    <h2 class="font-weight-bold mb-0">Enrollment Application</h2>
+                    <small class="text-muted">Sections are automatically assigned (1 Section per level, max 30 slots)</small>
+                </div>
+                <div>
+                    <span class="step-pill active mr-1" id="step-ind-1">1</span>
+                    <span class="step-pill mr-1" id="step-ind-2">2</span>
+                    <span class="step-pill mr-1" id="step-ind-3">3</span>
+                    <span class="step-pill" id="step-ind-4">4</span>
+                </div>
+            </div>
+
+            <form id="enrollmentForm" onsubmit="event.preventDefault(); submitEnrollment();">
+                <!-- STEP 1: Student Information -->
+                <div class="card card-custom p-4 shadow-sm mb-4 bg-light" id="wizard-step-1">
+                    <h5 class="font-weight-bold mb-3">Student Information</h5>
+                    <div class="form-row">
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">First Name *</label><input type="text" id="reg_first_name" class="form-control" required placeholder="First name"></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Middle Name</label><input type="text" id="reg_middle_name" class="form-control" placeholder="Middle name"></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Last Name *</label><input type="text" id="reg_last_name" class="form-control" required placeholder="Last name"></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Nickname</label><input type="text" id="reg_nickname" class="form-control" placeholder="Nickname"></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">LRN (12 Digits) *</label><input type="text" id="reg_lrn" class="form-control" maxlength="12" required placeholder="12-digit LRN"></div>
+                        <div class="form-group col-md-4">
+                            <label class="small font-weight-bold">Grade Level *</label>
+                            <select id="reg_grade_level" class="form-control" required>
+                                <option value="" disabled selected>Select grade level</option>
+                                <optgroup label="Early Childhood">
+                                    <option value="1">Preschool</option>
+                                    <option value="2">Kindergarten</option>
+                                </optgroup>
+                                <optgroup label="Elementary School">
+                                    <option value="3">Grade 1</option>
+                                    <option value="4">Grade 2</option>
+                                    <option value="5">Grade 3</option>
+                                    <option value="6">Grade 4</option>
+                                    <option value="7">Grade 5</option>
+                                    <option value="8">Grade 6</option>
+                                </optgroup>
+                                <optgroup label="Junior High School">
+                                    <option value="9">Grade 7 (Junior High)</option>
+                                    <option value="10">Grade 8 (Junior High)</option>
+                                    <option value="11">Grade 9 (Junior High)</option>
+                                    <option value="12">Grade 10 (Junior High)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Date of Birth *</label><input type="date" id="reg_dob" class="form-control" required></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Place of Birth *</label><input type="text" id="reg_pob" class="form-control" required placeholder="e.g. Marikina City"></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Gender *</label>
+                            <select id="reg_gender" class="form-control" required>
+                                <option value="" disabled selected>Select gender</option>
+                                <option>Male</option>
+                                <option>Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label class="small font-weight-bold">Choose Religion *</label>
+                            <select id="reg_religion" class="form-control" required>
+                                <option value="" disabled selected>Select Religion</option>
+                                <option value="Roman Catholic">Roman Catholic</option>
+                                <option value="Christian (Born Again / Protestant)">Christian (Born Again / Protestant)</option>
+                                <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
+                                <option value="Seventh-day Adventist">Seventh-day Adventist</option>
+                                <option value="Baptist">Baptist</option>
+                                <option value="Islam">Islam</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">General Average</label><input type="number" step="0.1" id="reg_average" class="form-control" placeholder="e.g. 88.5"></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Transferee?</label>
+                            <select id="reg_transferee" class="form-control">
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6"><label class="small font-weight-bold">Former School</label><input type="text" id="reg_former" class="form-control" placeholder="Previous school attended"></div>
+                        <div class="form-group col-md-6"><label class="small font-weight-bold">Contact Number *</label><input type="text" id="reg_contact" class="form-control" required placeholder="09xxxxxxxxx"></div>
+                        <div class="form-group col-12"><label class="small font-weight-bold">Present Address *</label><input type="text" id="reg_address" class="form-control" required placeholder="House No., Street, Barangay, City"></div>
+                    </div>
+                    <div class="text-right mt-3">
+                        <button type="button" class="btn btn-rics-primary px-4" onclick="validateAndGoStep(2)">Next &rarr;</button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Emergency & Medical Information -->
+                <div class="card card-custom p-4 shadow-sm mb-4 bg-light d-none" id="wizard-step-2">
+                    <h5 class="font-weight-bold mb-3">Emergency & Medical Information</h5>
+                    <div class="form-row">
+                        <div class="form-group col-md-6"><label class="small font-weight-bold">Emergency Contact Person *</label><input type="text" id="reg_emer_name" class="form-control" placeholder="Parent or guardian full name"></div>
+                        <div class="form-group col-md-3"><label class="small font-weight-bold">Relationship *</label><input type="text" id="reg_emer_rel" class="form-control" placeholder="e.g. Mother / Father"></div>
+                        <div class="form-group col-md-3"><label class="small font-weight-bold">Contact No. *</label><input type="text" id="reg_emer_contact" class="form-control" placeholder="09xxxxxxxxx"></div>
+                        <div class="form-group col-12"><label class="small font-weight-bold">Emergency Address *</label><input type="text" id="reg_emer_address" class="form-control" placeholder="Complete address"></div>
+                        <div class="form-group col-md-6"><label class="small font-weight-bold">Known Illnesses / Surgical History</label><input type="text" id="reg_illnesses" class="form-control" placeholder="None or list conditions"></div>
+                        <div class="form-group col-md-6"><label class="small font-weight-bold">Known Allergies</label><input type="text" id="reg_allergies" class="form-control" placeholder="None or list allergies"></div>
+                        <div class="form-group col-12">
+                            <label class="small font-weight-bold d-block">Medications Allowed (Check all that apply)</label>
+                            <div class="form-check form-check-inline mr-3"><input class="form-check-input" type="checkbox" name="otc" value="Biogesic" id="otc1"><label class="form-check-label small" for="otc1">Biogesic</label></div>
+                            <div class="form-check form-check-inline mr-3"><input class="form-check-input" type="checkbox" name="otc" value="Bioflu" id="otc2"><label class="form-check-label small" for="otc2">Bioflu</label></div>
+                            <div class="form-check form-check-inline mr-3"><input class="form-check-input" type="checkbox" name="otc" value="Diatabs" id="otc3"><label class="form-check-label small" for="otc3">Diatabs</label></div>
+                            <div class="form-check form-check-inline mr-3"><input class="form-check-input" type="checkbox" name="otc" value="Bonamin" id="otc4"><label class="form-check-label small" for="otc4">Bonamin</label></div>
+                            <div class="form-check form-check-inline mr-3"><input class="form-check-input" type="checkbox" name="otc" value="Decolgen" id="otc5"><label class="form-check-label small" for="otc5">Decolgen</label></div>
+                            <div class="form-check form-check-inline mr-3"><input class="form-check-input" type="checkbox" name="otc" value="Neozep" id="otc6"><label class="form-check-label small" for="otc6">Neozep</label></div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="button" class="btn btn-outline-secondary px-4" style="border-radius: 50px;" onclick="goToStep(1)">&larr; Back</button>
+                        <button type="button" class="btn btn-rics-primary px-4" onclick="goToStep(3)">Next &rarr;</button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Payment Scheme -->
+                <div class="card card-custom p-4 shadow-sm mb-4 bg-light d-none" id="wizard-step-3">
+                    <h5 class="font-weight-bold mb-1">Payment Plan & Terms</h5>
+                    <p class="text-muted small mb-4">Select preferred installment terms and payment channel.</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="font-weight-bold small">Step 1: Choose a Payment Scheme</label>
+                            <div class="list-group mb-3">
+                                <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
+                                    <span><input type="radio" name="payment_scheme" value="Annually" checked onchange="updatePaymentBreakdown('Annually')"> Annually (No Surcharge)</span>
+                                    <b>₱45,000.00</b>
+                                </label>
+                                <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
+                                    <span><input type="radio" name="payment_scheme" value="Semi-Annually" onchange="updatePaymentBreakdown('Semi-Annually')"> Semi-Annually</span>
+                                    <b>₱46,000.00</b>
+                                </label>
+                                <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
+                                    <span><input type="radio" name="payment_scheme" value="Quarterly" onchange="updatePaymentBreakdown('Quarterly')"> Quarterly</span>
+                                    <b>₱47,000.00</b>
+                                </label>
+                                <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
+                                    <span><input type="radio" name="payment_scheme" value="Monthly" onchange="updatePaymentBreakdown('Monthly')"> Monthly</span>
+                                    <b>₱48,000.00</b>
+                                </label>
+                            </div>
+
+                            <label class="font-weight-bold small">Step 2: Payment Method</label>
+                            <div>
+                                <label class="mr-3"><input type="radio" name="pay_method" value="Cash" checked> Cash Payment at Cashier</label>
+                                <label><input type="radio" name="pay_method" value="GCash"> GCash Transfer</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card p-3 border-0 bg-white shadow-sm h-100" style="border-radius: 12px;">
+                                <h6 class="font-weight-bold">Payment Terms Breakdown</h6>
+                                <p class="small text-muted mb-2" id="breakdown-desc">Full Payment: ₱45,000.00 due upon enrollment.</p>
+                                <div class="bg-light p-3 rounded small text-secondary">
+                                    <div><b>GCash Number:</b> 0917-894-2123</div>
+                                    <div><b>Account Name:</b> RICS PAYMENT</div>
+                                    <div class="mt-2 text-dark font-monospace" style="font-size:0.75rem;">Proceed to Cashier to finalize enrollment and acquire official receipt.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary px-4" style="border-radius: 50px;" onclick="goToStep(2)">&larr; Back</button>
+                        <button type="button" class="btn btn-rics-primary px-4" onclick="goToStep(4)">Next &rarr;</button>
+                    </div>
+                </div>
+
+                <!-- STEP 4: Portal Account Credentials -->
+                <div class="card card-custom p-4 shadow-sm mb-4 bg-light d-none" id="wizard-step-4">
+                    <h5 class="font-weight-bold mb-3">Portal Credentials</h5>
+                    <p class="text-muted small">Create credentials for the Student / Parent dashboard.</p>
+                    <div style="max-width:460px;">
+                        <div class="form-group"><label class="small font-weight-bold">Create Username (Surname first) *</label><input type="text" id="reg_username" class="form-control" placeholder="e.g. DelaCruz_Juan" required></div>
+                        <div class="form-group"><label class="small font-weight-bold">Email Address *</label><input type="email" id="reg_email" class="form-control" placeholder="name@example.com" required></div>
+                        <div class="form-group"><label class="small font-weight-bold">Create a Password *</label><input type="password" id="reg_password" class="form-control" placeholder="Min. 6 characters" required></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary px-4" style="border-radius: 50px;" onclick="goToStep(3)">&larr; Back</button>
+                        <button type="submit" class="btn btn-success px-5 font-weight-bold" style="border-radius: 50px;">Submit Enrollment Application</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- 4. STUDENT / PARENT DASHBOARD -->
+    <section id="student-portal-view" class="d-none py-5">
+        <div class="container" style="max-width:980px;">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                <div class="d-flex align-items-center">
+                    <img src="rics-logo.png" alt="RICS Seal" style="height: 60px; width: 60px; object-fit: contain; margin-right: 15px;">
+                    <div>
+                        <h4 class="font-weight-bold mb-0 text-navy">REDEEMED IN CHRIST SCHOOL</h4>
+                        <small class="text-muted">Student & Parent Portal (SY 2026-2027)</small>
+                    </div>
+                </div>
+                <button class="btn btn-outline-danger btn-sm" onclick="logout()">Sign Out</button>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                <div class="mb-2 mb-md-0">
+                    <h4 class="font-weight-bold mb-0">Hello, <span id="portal-student-name"></span>!</h4>
+                    <span class="badge badge-primary mt-1" style="font-size: 0.9rem;" id="portal-section">Section: Unassigned</span>
+                    <span class="badge badge-info mt-1" style="font-size: 0.9rem;" id="portal-grade-level">Level: ---</span>
+                </div>
+                <div>
+                    Payment Status: <span class="badge badge-status badge-pending" id="portal-payment-status">Pending Official Receipt</span>
+                </div>
+            </div>
+
+            <!-- Student Balance Dashboard -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-2">
+                    <div class="analytics-metric-card text-center">
+                        <small class="text-muted font-weight-bold">TOTAL ASSESSED TUITION</small>
+                        <h3 class="font-weight-bold text-dark mt-2 mb-0" id="portal-total-tuition">₱0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <div class="analytics-metric-card text-center">
+                        <small class="text-muted font-weight-bold">AMOUNT PAID TO DATE</small>
+                        <h3 class="font-weight-bold text-success mt-2 mb-0" id="portal-amount-paid">₱0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <div class="analytics-metric-card text-center border-danger">
+                        <small class="text-danger font-weight-bold">REMAINING BALANCE</small>
+                        <h3 class="font-weight-bold text-danger mt-2 mb-0" id="portal-remaining-balance">₱0.00</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedule tailored specifically per Level -->
+            <div class="card card-custom p-3 shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="font-weight-bold mb-0">Official Class Schedule</h6>
+                    <small class="text-muted" id="portal-schedule-sub">Custom schedule for your registered level</small>
+                </div>
+                <div class="table-responsive">
+                    <table class="table schedule-table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>TIME</th>
+                                <th>MONDAY</th>
+                                <th>TUESDAY</th>
+                                <th>WEDNESDAY</th>
+                                <th>THURSDAY</th>
+                                <th>FRIDAY</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portal-schedule-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-4 mb-md-0">
+                    <div class="card card-custom p-4 shadow-sm h-100">
+                        <h6 class="font-weight-bold mb-3">Registrar Requirements Checklist</h6>
+                        <ul class="list-group list-group-flush small" id="portal-doc-checklist"></ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card card-custom p-4 shadow-sm h-100">
+                        <h6 class="font-weight-bold mb-2">Billing & Official Receipt Summary</h6>
+                        <p class="small text-muted mb-1">Payment Scheme: <b id="portal-scheme">---</b></p>
+                        <p class="small text-muted mb-3">Payment Method: <b id="portal-method">---</b></p>
+                        <div class="p-3 bg-light rounded text-center mb-3">
+                            <span class="text-secondary small d-block">Official Receipt Number</span>
+                            <span class="h5 font-weight-bold text-primary font-monospace" id="portal-or-number">Pending Official Receipt</span>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="window.print()">Print Official Enrollment Slip</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. STAFF TERMINAL (Registrar & Cashier) -->
+    <section id="staff-dashboard-view" class="d-none py-5">
+        <div class="container-fluid px-lg-5">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+                <div>
+                    <h3 class="font-weight-bold mb-0">Staff Administration Terminal</h3>
+                    <span class="badge badge-primary" id="staff-role-indicator">Active Access Role: ---</span>
+                </div>
+                <button class="btn btn-outline-danger btn-sm mt-2 mt-md-0" onclick="logout()">Sign Out</button>
+            </div>
+
+            <!-- CASHIER ANALYTICS & PAYMENT HISTORY -->
+            <div id="analytics-section" class="mb-5">
+                <h5 class="font-weight-bold mb-3 text-navy">📊 Payment Analytics Dashboard</h5>
+                <div class="row mb-4">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="analytics-metric-card border-info">
+                            <small class="text-info font-weight-bold">PAYMENTS TODAY</small>
+                            <h3 class="font-weight-bold text-info mt-2 mb-1" id="stat-rev-today">₱0.00</h3>
+                            <small class="text-muted"><span id="stat-count-today">0</span> Collections</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="analytics-metric-card border-primary">
+                            <small class="text-primary font-weight-bold">PAYMENTS THIS WEEK</small>
+                            <h3 class="font-weight-bold text-primary mt-2 mb-1" id="stat-rev-week">₱0.00</h3>
+                            <small class="text-muted"><span id="stat-count-week">0</span> Collections</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="analytics-metric-card border-success">
+                            <small class="text-success font-weight-bold">PAYMENTS THIS MONTH</small>
+                            <h3 class="font-weight-bold text-success mt-2 mb-1" id="stat-rev-month">₱0.00</h3>
+                            <small class="text-muted"><span id="stat-count-month">0</span> Collections</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="analytics-metric-card border-danger">
+                            <small class="text-danger font-weight-bold">TOTAL OUTSTANDING BALANCE</small>
+                            <h3 class="font-weight-bold text-danger mt-2 mb-1" id="stat-total-balance">₱0.00</h3>
+                            <small class="text-muted">Uncollected Balances</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAYMENT TRANSACTION HISTORY FOR CASHIER -->
+                <div class="card card-custom shadow-sm p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                        <div>
+                            <h5 class="font-weight-bold mb-1">📜 Payment History Log</h5>
+                            <small class="text-muted">Track payments received today, this week, and this month</small>
+                        </div>
+                        <div class="btn-group btn-group-sm mt-2 mt-md-0" role="group">
+                            <button type="button" class="btn btn-outline-primary active" id="btn-hist-today" onclick="loadPaymentHistory('today')">Today</button>
+                            <button type="button" class="btn btn-outline-primary" id="btn-hist-week" onclick="loadPaymentHistory('week')">This Week</button>
+                            <button type="button" class="btn btn-outline-primary" id="btn-hist-month" onclick="loadPaymentHistory('month')">This Month</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle small mb-0">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>OR Number</th>
+                                    <th>LRN</th>
+                                    <th>Student Name</th>
+                                    <th>Level</th>
+                                    <th>Method</th>
+                                    <th>Amount Paid</th>
+                                    <th>Cashier</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payment-history-body">
+                                <tr><td colspan="8" class="text-center text-muted py-3">Loading transaction records...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ENROLLEES PER LEVEL DASHBOARD -->
+            <div class="card card-custom shadow-sm p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                    <div>
+                        <h5 class="font-weight-bold mb-1">Student Records & Enrollees per Level</h5>
+                        <small class="text-muted">1 section per level (Maximum 30 students each)</small>
+                    </div>
+                    <div class="d-flex align-items-center mt-2 mt-md-0">
+                        <label class="small font-weight-bold mr-2 mb-0">Level Filter:</label>
+                        <select id="filter_grade_level" class="form-control form-control-sm" style="width: 220px;" onchange="fetchStaffRecords()">
+                            <option value="ALL">All Grade Levels</option>
+                            <option value="1">Preschool</option>
+                            <option value="2">Kindergarten</option>
+                            <option value="3">Grade 1</option>
+                            <option value="4">Grade 2</option>
+                            <option value="5">Grade 3</option>
+                            <option value="6">Grade 4</option>
+                            <option value="7">Grade 5</option>
+                            <option value="8">Grade 6</option>
+                            <option value="9">Grade 7 (Junior High)</option>
+                            <option value="10">Grade 8 (Junior High)</option>
+                            <option value="11">Grade 9 (Junior High)</option>
+                            <option value="12">Grade 10 (Junior High)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>LRN</th>
+                                <th>Full Name</th>
+                                <th>Grade Level</th>
+                                <th>Section & Slots (30 max)</th>
+                                <th>Religion</th>
+                                <th>Assessed</th>
+                                <th>Balance Remaining</th>
+                                <th>Payment Status</th>
+                                <th>Receipt</th>
+                                <th>Role Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staff-records-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- REGISTRAR REQUIREMENTS CHECKLIST MODAL -->
+    <div class="modal fade" id="registrarDocModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow" style="border-radius: 16px;">
+                <div class="modal-header border-bottom pb-3">
+                    <div>
+                        <h5 class="modal-title font-weight-bold text-navy" id="docModalStudentName">Student Requirements Checklist</h5>
+                        <small class="text-muted" id="docModalLRN">LRN: ---</small>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3">Toggle checkboxes to verify submitted credentials on the registrar side.</p>
+                    <div id="modalDocList"></div>
+                </div>
+                <div class="modal-footer border-top pt-2">
+                    <button type="button" class="btn btn-secondary btn-sm px-4" style="border-radius: 50px;" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CASHIER PAYMENT CONFIRMATION MODAL -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 400px;">
+            <div class="modal-content border-0 shadow" style="border-radius: 16px;">
+                <div class="modal-header border-bottom pb-3">
+                    <h5 class="modal-title font-weight-bold text-navy">Confirm Payment</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="paymentForm" onsubmit="event.preventDefault(); submitPayment();">
+                        <input type="hidden" id="pay_payment_id">
+                        <div class="form-group mb-4">
+                            <label class="small font-weight-bold">Amount to Collect (PHP)</label>
+                            <input type="number" step="0.01" id="pay_amount" class="form-control" required placeholder="0.00">
+                        </div>
+                        <div class="d-flex justify-content-end border-top pt-3">
+                            <button type="button" class="btn btn-secondary btn-sm px-4 mr-2" style="border-radius: 50px;" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success btn-sm px-4 font-weight-bold" style="border-radius: 50px;">Issue Receipt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIGN-IN MODAL -->
+    <div class="modal fade" id="loginModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width:420px;">
+            <div class="modal-content border-0 p-4 shadow" style="border-radius: 20px;">
+                <div class="modal-body p-0 text-center">
+                    <img src="rics-logo.png" alt="RICS Logo" style="width: 72px; height: 72px; object-fit: contain;" class="mb-3">
+                    <h4 class="font-weight-bold mb-3" style="color:var(--rics-navy);">Portal Login</h4>
+                    <form onsubmit="event.preventDefault(); handleLogin();" class="text-left">
+                        <div class="form-group mb-3">
+                            <label class="small font-weight-bold">Username or Email</label>
+                            <input type="text" id="login_username" class="form-control" required placeholder="Enter username or email">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="small font-weight-bold">Password</label>
+                            <input type="password" id="login_password" class="form-control" required placeholder="Enter password">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-rics-primary btn-block mb-2">Continue</button>
+                        <div class="text-center mt-3">
+                            <small class="text-muted d-block">Default Staff Passwords: <code>Password123</code></small>
+                            <small class="text-muted d-block">Roles: <code>cashier_staff</code> | <code>registrar_staff</code></small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer mt-5" id="contact-footer">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-lg-5 mb-4 mb-lg-0">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="rics-logo.png" alt="RICS Logo" style="height: 46px; width: 46px; object-fit: contain; margin-right: 12px;">
+                        <div>
+                            <h6 class="mb-0 text-white font-weight-bold">REDEEMED IN CHRIST SCHOOL</h6>
+                            <small style="color: #94a3b8; font-size: 0.72rem;">ESTABLISHED 1976</small>
+                        </div>
+                    </div>
+                    <p class="small pr-4">We exist to provide quality Christian education, empowering students to grow academically and spiritually to meet global challenges.</p>
+                    <div class="small">📍 265 C.M Recto Street Parang Marikina City</div>
+                    <div class="small">📞 +63 2 8942 1234 / admissions@rics.edu.ph</div>
+                </div>
+                <div class="col-lg-3 mb-4 mb-lg-0">
+                    <h6>ADMISSIONS</h6>
+                    <a href="#" onclick="showSection('requirements-view')">Requirements Guide</a>
+                    <a href="#" onclick="showSection('enrollment-wizard')">Slot Inquiries</a>
+                    <a href="#" onclick="showSection('enrollment-wizard')">Enrollment Fees</a>
+                    <a href="#">ESC Subsidy</a>
+                </div>
+                <div class="col-lg-4">
+                    <h6>CAMPUS LOCATION</h6>
+                    <div class="rounded overflow-hidden border border-secondary" style="height: 140px;">
+                        <img src="map.png" alt="RICS Marikina Campus Location Map" class="img-fluid w-100 h-100" style="object-fit: cover; display: block;">
+                    </div>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <div class="text-center small text-white-50">
+                &copy; 2026 Redeemed in Christ School. All Rights Reserved. Powered by RIC Enrollment Management System.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        let currentRole = null;
+        let currentDocStudentId = null;
+
+        // Schedules per Academic Tier
+        const schedulesByTier = {
+            preschool: [
+                { time: "8:00 - 8:45", mon: "Devotion & Circle Time", tue: "Letters & Phonics", wed: "Number Play", thu: "Music & Rhymes", fri: "Storytelling" },
+                { time: "8:45 - 9:30", mon: "Sensory & Motor Play", tue: "Christian Values", wed: "Colors & Shapes", thu: "Arts & Crafts", fri: "Show & Tell" },
+                { time: "9:30 - 10:00", mon: "SNACK & RECESS", tue: "SNACK & RECESS", wed: "SNACK & RECESS", thu: "SNACK & RECESS", fri: "SNACK & RECESS" },
+                { time: "10:00 - 11:00", mon: "Free Play & Guided Rest", tue: "Character Formation", wed: "Social Play", thu: "Play Dough & Art", fri: "Homeroom Dismissal" }
+            ],
+            elementary: [
+                { time: "7:30 - 8:30", mon: "Bible & Character", tue: "Mathematics", wed: "English", thu: "Science", fri: "Homeroom Guidance" },
+                { time: "8:30 - 9:30", mon: "Science", tue: "Filipino", wed: "Mathematics", thu: "Filipino", fri: "MAPEH" },
+                { time: "9:30 - 10:00", mon: "RECESS BREAK", tue: "RECESS BREAK", wed: "RECESS BREAK", thu: "RECESS BREAK", fri: "RECESS BREAK" },
+                { time: "10:00 - 11:00", mon: "Araling Panlipunan", tue: "English Reading", wed: "EPP / ICT", thu: "Araling Panlipunan", fri: "Values Education" }
+            ],
+            junior: [
+                { time: "7:15 - 8:15", mon: "Christian Living", tue: "Algebra / Geometry", wed: "English Literature", thu: "Integrated Science", fri: "Flag & Homeroom" },
+                { time: "8:15 - 9:15", mon: "Science Laboratory", tue: "Filipino Panitikan", wed: "Advanced Math", thu: "Filipino Gramatika", fri: "MAPEH / P.E." },
+                { time: "9:15 - 9:45", mon: "RECESS", tue: "RECESS", wed: "RECESS", thu: "RECESS", fri: "RECESS" },
+                { time: "9:45 - 10:45", mon: "Araling Panlipunan (Economics)", tue: "TLE / Robotics", wed: "TLE / Cookery", thu: "Contemporary Issues", fri: "Christian Leadership" }
+            ]
+        };
+
+        const admissionData = {
+            preschool: {
+                title: "Preschool - Documents to submit",
+                items: [
+                    "PSA-issued birth certificate (original + photocopy)",
+                    "2 pieces 2x2 recent ID photos",
+                    "Child's immunization / medical record",
+                    "Parent's valid government-issued ID"
+                ]
+            },
+            kinder: {
+                title: "Kindergarten - Documents to submit",
+                items: [
+                    "PSA-issued birth certificate (original + photocopy)",
+                    "Preschool Certificate of Completion (if applicable)",
+                    "Updated Immunization / Medical Record",
+                    "2 pieces 2x2 recent ID pictures",
+                    "Parent's government-issued ID photocopy"
+                ]
+            },
+            elementary: {
+                title: "Elementary (Grades 1 to 6) - Documents to submit",
+                items: [
+                    "PSA-issued birth certificate (photocopy)",
+                    "Latest Report Card (Form 138 / SF9) with passing marks",
+                    "Certificate of Good Moral Character (incoming Grades 4-6)",
+                    "ECD Checklist (incoming Grade 1)",
+                    "2 pieces 2x2 recent ID photos with white background"
+                ]
+            },
+            junior: {
+                title: "Junior High School (Grades 7 to 10) - Documents to submit",
+                items: [
+                    "Original PSA Birth Certificate",
+                    "Official Form 137 / SF10 (Learner Permanent Record)",
+                    "Form 138 (Final Report Card) signed by Principal",
+                    "Certificate of Good Moral Character from previous school head",
+                    "ESC Subsidy or QVR Certificate (if grantee)"
+                ]
+            },
+            transferee: {
+                title: "Transferee - Documents to submit",
+                items: [
+                    "PSA Birth Certificate",
+                    "Certificate of Transfer Credential / Honorable Dismissal",
+                    "Certified True Copy of Grades / SF10 (Form 137)",
+                    "Certificate of Good Moral Character",
+                    "Barangay Clearance of present residence"
+                ]
+            }
+        };
+
+        function switchReqTab(tabKey) {
+            ['preschool', 'kinder', 'elementary', 'junior', 'transferee'].forEach(k => {
+                const btn = document.getElementById(`btn-tab-${k}`);
+                if (btn) {
+                    btn.className = (k === tabKey) ? 
+                        "btn btn-dark px-4 btn-sm req-tab-btn mr-1 mb-1" : 
+                        "btn btn-outline-secondary px-4 btn-sm req-tab-btn mr-1 mb-1";
+                }
+            });
+
+            const data = admissionData[tabKey];
+            document.getElementById('req-tab-title').innerText = data.title;
+            const container = document.getElementById('req-checklist-container');
+            container.innerHTML = '';
+            data.items.forEach(item => {
+                container.innerHTML += `<li class="mb-2"><span class="text-success mr-2 font-weight-bold">✔</span> ${item}</li>`;
+            });
+        }
+
+        function showSection(id) {
+            ['home-view', 'requirements-view', 'enrollment-wizard', 'student-portal-view', 'staff-dashboard-view'].forEach(s => {
+                document.getElementById(s).classList.add('d-none');
+            });
+            document.getElementById(id).classList.remove('d-none');
+            window.scrollTo(0,0);
+        }
+
+        function openLoginModal() {
+            $('#loginModal').modal('show');
+        }
+
+        function goToStep(step) {
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`wizard-step-${i}`).classList.add('d-none');
+                document.getElementById(`step-ind-${i}`).classList.remove('active');
+            }
+            document.getElementById(`wizard-step-${step}`).classList.remove('d-none');
+            for (let j = 1; j <= step; j++) {
+                document.getElementById(`step-ind-${j}`).classList.add('active');
+            }
+        }
+
+        function validateAndGoStep(targetStep) {
+            const req = ['reg_first_name', 'reg_last_name', 'reg_lrn', 'reg_grade_level', 'reg_dob', 'reg_pob', 'reg_gender', 'reg_religion', 'reg_contact', 'reg_address'];
+            for (let id of req) {
+                const el = document.getElementById(id);
+                if (!el.value.trim()) {
+                    alert('Please complete all required fields (including Religion) before proceeding.');
+                    el.focus();
+                    return;
+                }
+            }
+            goToStep(targetStep);
+        }
+
+        function updatePaymentBreakdown(scheme) {
+            const box = document.getElementById('breakdown-desc');
+            if (scheme === 'Annually') {
+                box.innerHTML = "<b>Full Payment: ₱45,000.00</b> due upon enrollment (0% Surcharge).";
+            } else if (scheme === 'Semi-Annually') {
+                box.innerHTML = "<b>1st Installment: ₱23,000.00</b> (Upon Enrollment)<br><b>2nd Installment: ₱23,000.00</b> (Before Midterms).";
+            } else if (scheme === 'Quarterly') {
+                box.innerHTML = "<b>4 Installments: ₱11,750.00</b> payable every grading period.";
+            } else if (scheme === 'Monthly') {
+                box.innerHTML = "<b>Downpayment: ₱8,000.00</b>, followed by ₱4,000.00 monthly installments.";
+            }
+        }
+
+        async function submitEnrollment() {
+            const payload = {
+                first_name: document.getElementById('reg_first_name').value.trim(),
+                middle_name: document.getElementById('reg_middle_name').value.trim(),
+                last_name: document.getElementById('reg_last_name').value.trim(),
+                nickname: document.getElementById('reg_nickname').value.trim(),
+                lrn: document.getElementById('reg_lrn').value.trim(),
+                grade_level_id: document.getElementById('reg_grade_level').value,
+                date_of_birth: document.getElementById('reg_dob').value,
+                place_of_birth: document.getElementById('reg_pob').value.trim(),
+                gender: document.getElementById('reg_gender').value,
+                religion: document.getElementById('reg_religion').value,
+                contact_no: document.getElementById('reg_contact').value.trim(),
+                present_address: document.getElementById('reg_address').value.trim(),
+                is_transferee: document.getElementById('reg_transferee').value,
+                former_school: document.getElementById('reg_former').value.trim(),
+                average: document.getElementById('reg_average').value || null,
+                emer_name: document.getElementById('reg_emer_name').value.trim(),
+                emer_rel: document.getElementById('reg_emer_rel').value.trim(),
+                emer_contact: document.getElementById('reg_emer_contact').value.trim(),
+                emer_address: document.getElementById('reg_emer_address').value.trim(),
+                illnesses: document.getElementById('reg_illnesses').value.trim(),
+                allergies: document.getElementById('reg_allergies').value.trim(),
+                allowed_meds: Array.from(document.querySelectorAll('input[name="otc"]:checked')).map(c => c.value),
+                payment_scheme: document.querySelector('input[name="payment_scheme"]:checked').value,
+                payment_method: document.querySelector('input[name="pay_method"]:checked').value,
+                username: document.getElementById('reg_username').value.trim(),
+                email: document.getElementById('reg_email').value.trim(),
+                password: document.getElementById('reg_password').value
+            };
+
+            const res = await fetch('api.php?action=submit_enrollment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Student successfully registered and section assigned! Loading dashboard.');
+                loadStudentPortal();
+            } else {
+                alert('Registration error: ' + data.message);
+            }
+        }
+
+        async function handleLogin() {
+            const res = await fetch('api.php?action=login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    login_id: document.getElementById('login_username').value.trim(),
+                    password: document.getElementById('login_password').value.trim()
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                $('#loginModal').modal('hide');
+                currentRole = data.role;
+                if (data.role === 'student') {
+                    loadStudentPortal();
+                } else {
+                    loadStaffDashboard(data.role);
+                }
+            } else {
+                alert(data.message);
+            }
+        }
+
+        async function loadStudentPortal() {
+            const res = await fetch('api.php?action=get_portal_data');
+            const resData = await res.json();
+            if (resData.success && resData.data) {
+                const s = resData.data;
+                document.getElementById('portal-student-name').innerText = `${s.first_name} ${s.last_name}`;
+                document.getElementById('portal-section').innerText = `Section: ${s.section_name || 'Unassigned'} (${s.current_slots}/${s.max_capacity} slots left)`;
+                document.getElementById('portal-grade-level').innerText = `Level: ${s.level_name}`;
+                document.getElementById('portal-scheme').innerText = s.payment_scheme;
+                document.getElementById('portal-method').innerText = s.payment_method;
+                
+                const total = parseFloat(s.total_amount || 0);
+                const paid = parseFloat(s.amount_paid || 0);
+                const bal = parseFloat(s.balance || 0);
+
+                document.getElementById('portal-total-tuition').innerText = '₱' + total.toLocaleString(undefined, {minimumFractionDigits: 2});
+                document.getElementById('portal-amount-paid').innerText = '₱' + paid.toLocaleString(undefined, {minimumFractionDigits: 2});
+                document.getElementById('portal-remaining-balance').innerText = '₱' + bal.toLocaleString(undefined, {minimumFractionDigits: 2});
+
+                const statusBadge = document.getElementById('portal-payment-status');
+                statusBadge.innerText = s.payment_status;
+                statusBadge.className = `badge badge-status ${s.payment_status === 'Fully Paid' ? 'badge-verified' : 'badge-pending'}`;
+                document.getElementById('portal-or-number').innerText = s.receipt_number || 'Pending Official Receipt';
+
+                renderStudentSchedule(parseInt(s.grade_level_id));
+
+                const checkList = document.getElementById('portal-doc-checklist');
+                checkList.innerHTML = '';
+                s.documents.forEach(doc => {
+                    const isPassed = doc.status === 'Verified' || doc.status === 'Submitted';
+                    checkList.innerHTML += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><input type="checkbox" ${isPassed ? 'checked' : ''} disabled class="mr-2"> ${doc.doc_type}</span>
+                            <span class="badge badge-pill ${isPassed ? 'badge-success' : 'badge-secondary'}">${doc.status}</span>
+                        </li>
+                    `;
+                });
+
+                showSection('student-portal-view');
+            }
+        }
+
+        function renderStudentSchedule(levelId) {
+            let tier = 'elementary';
+            if (levelId === 1 || levelId === 2) {
+                tier = 'preschool';
+            } else if (levelId >= 9) {
+                tier = 'junior';
+            }
+            const sched = schedulesByTier[tier];
+            const tbody = document.getElementById('portal-schedule-body');
+            tbody.innerHTML = '';
+            sched.forEach(r => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="font-weight-bold">${r.time}</td>
+                        <td>${r.mon}</td>
+                        <td>${r.tue}</td>
+                        <td>${r.wed}</td>
+                        <td>${r.thu}</td>
+                        <td>${r.fri}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function loadStaffDashboard(role) {
+            currentRole = role;
+            document.getElementById('staff-role-indicator').innerText = `Active Role: ${role.toUpperCase()}`;
+
+            if (role === 'registrar') {
+                document.getElementById('analytics-section').classList.add('d-none');
+            } else {
+                document.getElementById('analytics-section').classList.remove('d-none');
+                loadPaymentAnalytics();
+                loadPaymentHistory('today');
+            }
+
+            fetchStaffRecords();
+            showSection('staff-dashboard-view');
+        }
+
+        async function loadPaymentAnalytics() {
+            const res = await fetch('api.php?action=get_payment_analytics');
+            const data = await res.json();
+            if (data.success && data.analytics) {
+                const a = data.analytics;
+                document.getElementById('stat-rev-today').innerText = '₱' + parseFloat(a.revenue_today).toLocaleString(undefined, {minimumFractionDigits: 2});
+                document.getElementById('stat-count-today').innerText = a.count_today;
+                document.getElementById('stat-rev-week').innerText = '₱' + parseFloat(a.revenue_week).toLocaleString(undefined, {minimumFractionDigits: 2});
+                document.getElementById('stat-count-week').innerText = a.count_week;
+                document.getElementById('stat-rev-month').innerText = '₱' + parseFloat(a.revenue_month).toLocaleString(undefined, {minimumFractionDigits: 2});
+                document.getElementById('stat-count-month').innerText = a.count_month;
+                document.getElementById('stat-total-balance').innerText = '₱' + parseFloat(a.total_balance_receivable).toLocaleString(undefined, {minimumFractionDigits: 2});
+            }
+        }
+
+        async function loadPaymentHistory(timeframe) {
+            ['today', 'week', 'month'].forEach(t => {
+                const btn = document.getElementById(`btn-hist-${t}`);
+                if (btn) btn.classList.remove('active');
+            });
+            const activeBtn = document.getElementById(`btn-hist-${timeframe}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            const res = await fetch(`api.php?action=get_payment_history&timeframe=${timeframe}`);
+            const data = await res.json();
+            const tbody = document.getElementById('payment-history-body');
+            tbody.innerHTML = '';
+
+            if (!data.history || data.history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-3">No payments recorded for this period (${timeframe}).</td></tr>`;
+                return;
+            }
+
+            data.history.forEach(h => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${h.payment_timestamp}</td>
+                        <td><code>${h.receipt_number}</code></td>
+                        <td>${h.lrn}</td>
+                        <td><b>${h.student_name}</b></td>
+                        <td>${h.level_name}</td>
+                        <td><span class="badge badge-light border">${h.payment_method}</span></td>
+                        <td class="font-weight-bold text-success">₱${parseFloat(h.amount_paid).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td>${h.cashier_name || 'Cashier'}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function fetchStaffRecords() {
+            const level = document.getElementById('filter_grade_level').value;
+            const res = await fetch(`api.php?action=get_admin_records&grade_level=${level}`);
+            const data = await res.json();
+            const tbody = document.getElementById('staff-records-body');
+            tbody.innerHTML = '';
+
+            if (!data.records || data.records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted py-4">No enrolled student records found for the selected level.</td></tr>`;
+                return;
+            }
+
+            data.records.forEach(r => {
+                const bal = parseFloat(r.balance || 0);
+                const tot = parseFloat(r.total_amount || 0);
+                const role = currentRole;
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${r.lrn}</b></td>
+                        <td>${r.full_name}</td>
+                        <td><span class="badge badge-light border">${r.level_name}</span></td>
+                        <td>
+                            <b>${r.section_name || 'Unassigned'}</b><br>
+                            <small class="text-muted">${r.current_slots}/${r.max_capacity} slots remaining</small>
+                        </td>
+                        <td>${r.religion || 'N/A'}</td>
+                        <td>₱${tot.toLocaleString()}</td>
+                        <td class="${bal > 0 ? 'text-danger font-weight-bold' : 'text-success'}">₱${bal.toLocaleString()}</td>
+                        <td><span class="badge ${r.payment_status === 'Fully Paid' ? 'badge-success' : 'badge-info'}">${r.payment_status}</span></td>
+                        <td><code>${r.receipt_number || 'Pending'}</code></td>
+                        <td>
+                            <div>
+                                ${(role === 'registrar' || role === 'admin') ? 
+                                    `<button class="btn btn-sm btn-outline-primary py-0 px-2 mr-1" onclick="openDocumentModal(${r.student_id}, '${r.full_name.replace(/'/g, "\\'")}', '${r.lrn}')">Checklist</button>` : ''
+                                }
+                                ${(role === 'cashier' || role === 'admin') && r.payment_status !== 'Fully Paid' ? 
+                                    `<button class="btn btn-sm btn-success py-0 px-2" onclick="openPaymentModal(${r.payment_id}, ${bal})">Receive Payment</button>` : ''
+                                }
+                                ${r.payment_status === 'Fully Paid' && role === 'cashier' ? `<span class="text-success small">Paid</span>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function openDocumentModal(studentId, fullName, lrn) {
+            currentDocStudentId = studentId;
+            document.getElementById('docModalStudentName').innerText = `${fullName} - Checklist`;
+            document.getElementById('docModalLRN').innerText = `LRN: ${lrn}`;
+            
+            const res = await fetch(`api.php?action=get_student_documents&student_id=${studentId}`);
+            const data = await res.json();
+            const container = document.getElementById('modalDocList');
+            container.innerHTML = '';
+
+            if (data.success && data.documents) {
+                data.documents.forEach(doc => {
+                    const isChecked = doc.status === 'Verified' || doc.status === 'Submitted';
+                    container.innerHTML += `
+                        <div class="p-3 bg-light rounded d-flex justify-content-between align-items-center mb-2">
+                            <span class="font-weight-bold text-dark mb-0">${doc.doc_type}</span>
+                            <div class="d-flex align-items-center">
+                                <span class="badge badge-pill ${isChecked ? 'badge-success' : 'badge-secondary'} mr-3" id="badge_${doc.doc_id}">${doc.status}</span>
+                                <input type="checkbox" style="width: 18px; height: 18px;" id="chk_${doc.doc_id}" 
+                                    ${isChecked ? 'checked' : ''} 
+                                    onchange="toggleDocStatus(${studentId}, '${doc.doc_type}', this.checked, 'badge_${doc.doc_id}')">
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            $('#registrarDocModal').modal('show');
+        }
+
+        async function toggleDocStatus(studentId, docType, isChecked, badgeId) {
+            const res = await fetch('api.php?action=toggle_document_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    student_id: studentId,
+                    doc_type: docType,
+                    is_checked: isChecked
+                })
+            });
+            
+            const result = await res.json();
+            if (result.success) {
+                const badge = document.getElementById(badgeId);
+                badge.innerText = result.status;
+                badge.className = `badge badge-pill ${isChecked ? 'badge-success' : 'badge-secondary'} mr-3`;
+            } else {
+                alert('Failed to update requirement checklist.');
+            }
+        }
+
+        function openPaymentModal(paymentId, balance) {
+            document.getElementById('pay_payment_id').value = paymentId;
+            document.getElementById('pay_amount').value = balance;
+            $('#paymentModal').modal('show');
+        }
+
+        async function submitPayment() {
+            const paymentId = document.getElementById('pay_payment_id').value;
+            const amount = document.getElementById('pay_amount').value;
+            
+            if (!amount || amount <= 0) {
+                alert("Please enter a valid payment amount.");
+                return;
+            }
+
+            const res = await fetch('api.php?action=cashier_issue_receipt', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ payment_id: paymentId, amount_paid: parseFloat(amount) })
+            });
+            
+            const data = await res.json();
+            
+            if (data.success) {
+                alert(`Payment credited! Official Receipt Number Generated: ${data.receipt_number}`);
+                $('#paymentModal').modal('hide');
+                loadPaymentAnalytics();
+                loadPaymentHistory('today');
+                fetchStaffRecords();
+            } else {
+                alert(data.message);
+            }
+        }
+
+        async function logout() {
+            await fetch('api.php?action=logout');
+            location.reload();
+        }
+    </script>
+</body>
+</html>
