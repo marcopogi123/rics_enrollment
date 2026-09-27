@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Staff Dashboard - Redeemed in Christ School</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- STAFF TERMINAL (Registrar & Cashier) -->
+    <section id="staff-dashboard-view" class="py-5">
+        <div class="container-fluid px-lg-5">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+                <div>
+                    <h3 class="font-weight-bold mb-0">Staff Administration Terminal</h3>
+                    <span class="badge badge-primary" id="staff-role-indicator">Active Access Role: ---</span>
+                </div>
+                <button class="btn btn-outline-danger btn-sm mt-2 mt-md-0" id="btn-logout">Sign Out</button>
+            </div>
+
+            <!-- CASHIER ANALYTICS & PAYMENT HISTORY -->
+            <div id="analytics-section" class="mb-5">
+                <h5 class="font-weight-bold mb-3 text-navy">📊 Payment Analytics Dashboard</h5>
+                <div class="row mb-4">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="analytics-metric-card border-info">
+                            <small class="text-info font-weight-bold">PAYMENTS TODAY</small>
+                            <h3 class="font-weight-bold text-info mt-2 mb-1" id="stat-rev-today">₱0.00</h3>
+                            <small class="text-muted"><span id="stat-count-today">0</span> Collections</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="analytics-metric-card border-primary">
+                            <small class="text-primary font-weight-bold">PAYMENTS THIS WEEK</small>
+                            <h3 class="font-weight-bold text-primary mt-2 mb-1" id="stat-rev-week">₱0.00</h3>
+                            <small class="text-muted"><span id="stat-count-week">0</span> Collections</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="analytics-metric-card border-success">
+                            <small class="text-success font-weight-bold">PAYMENTS THIS MONTH</small>
+                            <h3 class="font-weight-bold text-success mt-2 mb-1" id="stat-rev-month">₱0.00</h3>
+                            <small class="text-muted"><span id="stat-count-month">0</span> Collections</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="analytics-metric-card border-danger">
+                            <small class="text-danger font-weight-bold">TOTAL OUTSTANDING BALANCE</small>
+                            <h3 class="font-weight-bold text-danger mt-2 mb-1" id="stat-total-balance">₱0.00</h3>
+                            <small class="text-muted">Uncollected Balances</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAYMENT TRANSACTION HISTORY FOR CASHIER -->
+                <div class="card card-custom shadow-sm p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                        <div>
+                            <h5 class="font-weight-bold mb-1">📜 Payment History Log</h5>
+                            <small class="text-muted">Track payments received today, this week, and this month</small>
+                        </div>
+                        <div class="btn-group btn-group-sm mt-2 mt-md-0" role="group">
+                            <button type="button" class="btn btn-outline-primary active btn-hist-filter" data-time="today">Today</button>
+                            <button type="button" class="btn btn-outline-primary btn-hist-filter" data-time="week">This Week</button>
+                            <button type="button" class="btn btn-outline-primary btn-hist-filter" data-time="month">This Month</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle small mb-0">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>OR Number</th>
+                                    <th>LRN</th>
+                                    <th>Student Name</th>
+                                    <th>Level</th>
+                                    <th>Method</th>
+                                    <th>Amount Paid</th>
+                                    <th>Cashier</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payment-history-body">
+                                <tr><td colspan="8" class="text-center text-muted py-3">Loading transaction records...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ENROLLEES PER LEVEL DASHBOARD -->
+            <div class="card card-custom shadow-sm p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                    <div>
+                        <h5 class="font-weight-bold mb-1">Student Records & Enrollees per Level</h5>
+                        <small class="text-muted">1 section per level (Maximum 30 students each)</small>
+                    </div>
+                    <div class="d-flex align-items-center mt-2 mt-md-0">
+                        <label class="small font-weight-bold mr-2 mb-0">Level Filter:</label>
+                        <select id="filter_grade_level" class="form-control form-control-sm" style="width: 220px;">
+                            <option value="ALL">All Grade Levels</option>
+                            <option value="1">Preschool</option>
+                            <option value="2">Kindergarten</option>
+                            <option value="3">Grade 1</option>
+                            <option value="4">Grade 2</option>
+                            <option value="5">Grade 3</option>
+                            <option value="6">Grade 4</option>
+                            <option value="7">Grade 5</option>
+                            <option value="8">Grade 6</option>
+                            <option value="9">Grade 7 (Junior High)</option>
+                            <option value="10">Grade 8 (Junior High)</option>
+                            <option value="11">Grade 9 (Junior High)</option>
+                            <option value="12">Grade 10 (Junior High)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>LRN</th>
+                                <th>Full Name</th>
+                                <th>Grade Level</th>
+                                <th>Section & Slots (30 max)</th>
+                                <th>Religion</th>
+                                <th>Assessed</th>
+                                <th>Balance Remaining</th>
+                                <th>Payment Status</th>
+                                <th>Receipt</th>
+                                <th>Role Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staff-records-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- REGISTRAR REQUIREMENTS CHECKLIST MODAL -->
+    <div class="modal fade" id="registrarDocModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow" style="border-radius: 16px;">
+                <div class="modal-header border-bottom pb-3">
+                    <div>
+                        <h5 class="modal-title font-weight-bold text-navy" id="docModalStudentName">Student Requirements Checklist</h5>
+                        <small class="text-muted" id="docModalLRN">LRN: ---</small>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3">Toggle checkboxes to verify submitted credentials on the registrar side.</p>
+                    <div id="modalDocList"></div>
+                </div>
+                <div class="modal-footer border-top pt-2">
+                    <button type="button" class="btn btn-secondary btn-sm px-4" style="border-radius: 50px;" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CASHIER PAYMENT CONFIRMATION MODAL -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 400px;">
+            <div class="modal-content border-0 shadow" style="border-radius: 16px;">
+                <div class="modal-header border-bottom pb-3">
+                    <h5 class="modal-title font-weight-bold text-navy">Confirm Payment</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="paymentForm">
+                        <input type="hidden" id="pay_payment_id">
+                        <div class="form-group mb-4">
+                            <label class="small font-weight-bold">Amount to Collect (PHP)</label>
+                            <input type="number" step="0.01" id="pay_amount" class="form-control" required placeholder="0.00">
+                        </div>
+                        <div class="d-flex justify-content-end border-top pt-3">
+                            <button type="button" class="btn btn-secondary btn-sm px-4 mr-2" style="border-radius: 50px;" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success btn-sm px-4 font-weight-bold" style="border-radius: 50px;">Issue Receipt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer mt-5" id="contact-footer">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-lg-5 mb-4 mb-lg-0">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="rics-logo.png" alt="RICS Logo" style="height: 46px; width: 46px; object-fit: contain; margin-right: 12px;">
+                        <div>
+                            <h6 class="mb-0 text-white font-weight-bold">REDEEMED IN CHRIST SCHOOL</h6>
+                            <small style="color: #94a3b8; font-size: 0.72rem;">ESTABLISHED 1976</small>
+                        </div>
+                    </div>
+                    <p class="small pr-4">We exist to provide quality Christian education, empowering students to grow academically and spiritually to meet global challenges.</p>
+                    <div class="small">📍 265 C.M Recto Street Parang Marikina City</div>
+                    <div class="small">📞 +63 2 8942 1234 / admissions@rics.edu.ph</div>
+                </div>
+                <div class="col-lg-3 mb-4 mb-lg-0">
+                    <h6>ADMISSIONS</h6>
+                    <a href="requirements.html">Requirements Guide</a>
+                    <a href="enrollment.html">Slot Inquiries</a>
+                    <a href="enrollment.html">Enrollment Fees</a>
+                    <a href="#">ESC Subsidy</a>
+                </div>
+                <div class="col-lg-4">
+                    <h6>CAMPUS LOCATION</h6>
+                    <div class="rounded overflow-hidden border border-secondary" style="height: 140px;">
+                        <img src="map.png" alt="RICS Marikina Campus Location Map" class="img-fluid w-100 h-100" style="object-fit: cover; display: block;">
+                    </div>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <div class="text-center small text-white-50">
+                &copy; 2026 Redeemed in Christ School. All Rights Reserved. Powered by RIC Enrollment Management System.
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
+    <script>
+        let currentRole = 'admin'; // Hardcoded for frontend demonstration. Usually set via session data endpoint.
+
+        function loadPaymentAnalytics() {
+            $.getJSON('api.php?action=get_payment_analytics', function(data) {
+                if (data.success && data.analytics) {
+                    const a = data.analytics;
+                    $('#stat-rev-today').text('₱' + parseFloat(a.revenue_today).toLocaleString(undefined, {minimumFractionDigits: 2}));
+                    $('#stat-count-today').text(a.count_today);
+                    $('#stat-rev-week').text('₱' + parseFloat(a.revenue_week).toLocaleString(undefined, {minimumFractionDigits: 2}));
+                    $('#stat-count-week').text(a.count_week);
+                    $('#stat-rev-month').text('₱' + parseFloat(a.revenue_month).toLocaleString(undefined, {minimumFractionDigits: 2}));
+                    $('#stat-count-month').text(a.count_month);
+                    $('#stat-total-balance').text('₱' + parseFloat(a.total_balance_receivable).toLocaleString(undefined, {minimumFractionDigits: 2}));
+                }
+            });
+        }
+
+        function loadPaymentHistory(timeframe) {
+            $('.btn-hist-filter').removeClass('active');$(`.btn-hist-filter[data-time="${timeframe}"]`).addClass('active');
+
+            $.getJSON(`api.php?action=get_payment_history&timeframe=${timeframe}`, function(data) {
+                const $tbody =$('#payment-history-body');
+                $tbody.empty();
+                
+                if (!data.history || data.history.length === 0) {
+                    $tbody.append(`<tr><td colspan="8" class="text-center text-muted py-3">No payments recorded for this period (${timeframe}).</td></tr>`);
+                    return;
+                }
+                
+                $.each(data.history, function(i, h) {
+                    $tbody.append(`
+                        <tr>
+                            <td>${h.payment_timestamp}</td>
+                            <td><code>${h.receipt_number}</code></td>
+                            <td>${h.lrn}</td>
+                            <td><b>${h.student_name}</b></td>
+                            <td>${h.level_name}</td>
+                            <td><span class="badge badge-light border">${h.payment_method}</span></td>
+                            <td class="font-weight-bold text-success">₱${parseFloat(h.amount_paid).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td>${h.cashier_name || 'Cashier'}</td>
+                        </tr>
+                    `);
+                });
+            });
+        }
+
+        function fetchStaffRecords() {
+            const level = $('#filter_grade_level').val();
+            $.getJSON(`api.php?action=get_admin_records&grade_level=${level}`, function(data) {
+                const $tbody =$('#staff-records-body');
+                $tbody.empty();
+                
+                if (!data.records || data.records.length === 0) {
+                    $tbody.append(`<tr><td colspan="10" class="text-center text-muted py-4">No enrolled student records found for the selected level.</td></tr>`);
+                    return;
+                }
+                
+                $.each(data.records, function(i, r) {
+                    const bal = parseFloat(r.balance || 0);
+                    const tot = parseFloat(r.total_amount || 0);
+                    
+                    $tbody.append(`
+                        <tr>
+                            <td><b>${r.lrn}</b></td>
+                            <td>${r.full_name}</td>
+                            <td><span class="badge badge-light border">${r.level_name}</span></td>
+                            <td>
+                                <b>${r.section_name || 'Unassigned'}</b><br>
+                                <small class="text-muted">${r.current_slots}/${r.max_capacity} slots remaining</small>
+                            </td>
+                            <td>${r.religion || 'N/A'}</td>
+                            <td>₱${tot.toLocaleString()}</td>
+                            <td class="${bal > 0 ? 'text-danger font-weight-bold' : 'text-success'}">₱${bal.toLocaleString()}</td>
+                            <td><span class="badge ${r.payment_status === 'Fully Paid' ? 'badge-success' : 'badge-info'}">${r.payment_status}</span></td>
+                            <td><code>${r.receipt_number || 'Pending'}</code></td>
+                            <td>
+                                <div>
+                                    ${(currentRole === 'registrar' || currentRole === 'admin') ? 
+                                        `<button class="btn btn-sm btn-outline-primary py-0 px-2 mr-1 btn-checklist" data-id="${r.student_id}" data-name="${r.full_name.replace(/'/g, "\\'")}" data-lrn="${r.lrn}">Checklist</button>` : ''
+                                    }
+                                    ${(currentRole === 'cashier' || currentRole === 'admin') && r.payment_status !== 'Fully Paid' ? 
+                                        `<button class="btn btn-sm btn-success py-0 px-2 btn-pay" data-payid="${r.payment_id}" data-bal="${bal}">Receive Payment</button>` : ''
+                                    }
+                                    ${r.payment_status === 'Fully Paid' && currentRole === 'cashier' ? `<span class="text-success small">Paid</span>` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `);
+                });
+            });
+        }
+
+        $(document).ready(function() {
+            // Check active session role first. For demo, setting as "admin".
+            $('#staff-role-indicator').text(`Active Role: ${currentRole.toUpperCase()}`);
+            if (currentRole === 'registrar') {
+                $('#analytics-section').addClass('d-none');
+            } else {
+                $('#analytics-section').removeClass('d-none');
+                loadPaymentAnalytics();
+                loadPaymentHistory('today');
+            }
+            
+            fetchStaffRecords();
+
+            // Event Listeners
+            $('#filter_grade_level').on('change', fetchStaffRecords);
+            
+            $('.btn-hist-filter').on('click', function() {
+                loadPaymentHistory($(this).data('time'));
+            });
+
+            // Delegate Registrar Document Modal functionality
+            $(document).on('click', '.btn-checklist', function() {
+                const studentId = $(this).data('id');$('#docModalStudentName').text($(this).data('name') + ' - Checklist');$('#docModalLRN').text('LRN: ' + $(this).data('lrn'));$.getJSON(`api.php?action=get_student_documents&student_id=${studentId}`, function(data) {
+                    const $container =$('#modalDocList');
+                    $container.empty();
+                    
+                    if (data.success && data.documents) {
+                        $.each(data.documents, function(i, doc) {
+                            const isChecked = doc.status === 'Verified' || doc.status === 'Submitted';
+                            $container.append(`
+                                <div class="p-3 bg-light rounded d-flex justify-content-between align-items-center mb-2">
+                                    <span class="font-weight-bold text-dark mb-0">${doc.doc_type}</span>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge badge-pill ${isChecked ? 'badge-success' : 'badge-secondary'} mr-3" id="badge_${doc.doc_id}">${doc.status}</span>
+                                        <input type="checkbox" class="doc-toggle" style="width: 18px; height: 18px;" 
+                                            data-sid="${studentId}" data-type="${doc.doc_type}" data-badgeid="badge_${doc.doc_id}" 
+                                            ${isChecked ? 'checked' : ''}>
+                                    </div>
+                                </div>
+                            `);
+                        });
+                    }
+                    $('#registrarDocModal').modal('show');
+                });
+            });
+
+            // Handle Checkbox Toggles via Ajax
+            $(document).on('change', '.doc-toggle', function() {
+                const isChecked = $(this).is(':checked');
+                const badgeId = $(this).data('badgeid');$.ajax({
+                    url: 'api.php?action=toggle_document_status',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        student_id: $(this).data('sid'),
+                        doc_type: $(this).data('type'),
+                        is_checked: isChecked
+                    }),
+                    success: function(result) {
+                        if (result.success) {
+                            const $badge =$('#' + badgeId);
+                            $badge.text(result.status);$badge.attr('class', `badge badge-pill ${isChecked ? 'badge-success' : 'badge-secondary'} mr-3`);
+                        } else {
+                            alert('Failed to update requirement checklist.');
+                        }
+                    }
+                });
+            });
+
+            // Delegate Cashier Payment Modal functionality
+            $(document).on('click', '.btn-pay', function() {$('#pay_payment_id').val($(this).data('payid'));$('#pay_amount').val($(this).data('bal'));$('#paymentModal').modal('show');
+            });
+
+            // Handle Payment Form Submit
+            $('#paymentForm').on('submit', function(e) {
+                e.preventDefault();
+                const amount = $('#pay_amount').val();
+                
+                if (!amount || amount <= 0) {
+                    alert("Please enter a valid payment amount.");
+                    return;
+                }
+
+                $.ajax({
+                    url: 'api.php?action=cashier_issue_receipt',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ 
+                        payment_id: $('#pay_payment_id').val(), 
+                        amount_paid: parseFloat(amount) 
+                    }),
+                    success: function(data) {
+                        if (data.success) {
+                            alert(`Payment credited! Official Receipt Number Generated: ${data.receipt_number}`);
+                            $('#paymentModal').modal('hide');
+                            loadPaymentAnalytics();
+                            loadPaymentHistory('today');
+                            fetchStaffRecords();
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                });
+            });
+
+            // Logout
+            $('#btn-logout').on('click', function() {
+                $.get('api.php?action=logout', function() {
+                    window.location.href = 'index.html';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Student Portal - Redeemed in Christ School</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- STUDENT / PARENT DASHBOARD -->
+    <section id="student-portal-view" class="py-5">
+        <div class="container" style="max-width:980px;">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                <div class="d-flex align-items-center">
+                    <img src="rics-logo.png" alt="RICS Seal" style="height: 60px; width: 60px; object-fit: contain; margin-right: 15px;">
+                    <div>
+                        <h4 class="font-weight-bold mb-0 text-navy">REDEEMED IN CHRIST SCHOOL</h4>
+                        <small class="text-muted">Student & Parent Portal (SY 2026-2027)</small>
+                    </div>
+                </div>
+                <button class="btn btn-outline-danger btn-sm" id="btn-logout">Sign Out</button>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                <div class="mb-2 mb-md-0">
+                    <h4 class="font-weight-bold mb-0">Hello, <span id="portal-student-name"></span>!</h4>
+                    <span class="badge badge-primary mt-1" style="font-size: 0.9rem;" id="portal-section">Section: Unassigned</span>
+                    <span class="badge badge-info mt-1" style="font-size: 0.9rem;" id="portal-grade-level">Level: ---</span>
+                </div>
+                <div>
+                    Payment Status: <span class="badge badge-status badge-pending" id="portal-payment-status">Pending Official Receipt</span>
+                </div>
+            </div>
+
+            <!-- Student Balance Dashboard -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-2">
+                    <div class="analytics-metric-card text-center">
+                        <small class="text-muted font-weight-bold">TOTAL ASSESSED TUITION</small>
+                        <h3 class="font-weight-bold text-dark mt-2 mb-0" id="portal-total-tuition">₱0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <div class="analytics-metric-card text-center">
+                        <small class="text-muted font-weight-bold">AMOUNT PAID TO DATE</small>
+                        <h3 class="font-weight-bold text-success mt-2 mb-0" id="portal-amount-paid">₱0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <div class="analytics-metric-card text-center border-danger">
+                        <small class="text-danger font-weight-bold">REMAINING BALANCE</small>
+                        <h3 class="font-weight-bold text-danger mt-2 mb-0" id="portal-remaining-balance">₱0.00</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedule tailored specifically per Level -->
+            <div class="card card-custom p-3 shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="font-weight-bold mb-0">Official Class Schedule</h6>
+                    <small class="text-muted" id="portal-schedule-sub">Custom schedule for your registered level</small>
+                </div>
+                <div class="table-responsive">
+                    <table class="table schedule-table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>TIME</th>
+                                <th>MONDAY</th>
+                                <th>TUESDAY</th>
+                                <th>WEDNESDAY</th>
+                                <th>THURSDAY</th>
+                                <th>FRIDAY</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portal-schedule-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-4 mb-md-0">
+                    <div class="card card-custom p-4 shadow-sm h-100">
+                        <h6 class="font-weight-bold mb-3">Registrar Requirements Checklist</h6>
+                        <ul class="list-group list-group-flush small" id="portal-doc-checklist"></ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card card-custom p-4 shadow-sm h-100">
+                        <h6 class="font-weight-bold mb-2">Billing & Official Receipt Summary</h6>
+                        <p class="small text-muted mb-1">Payment Scheme: <b id="portal-scheme">---</b></p>
+                        <p class="small text-muted mb-3">Payment Method: <b id="portal-method">---</b></p>
+                        <div class="p-3 bg-light rounded text-center mb-3">
+                            <span class="text-secondary small d-block">Official Receipt Number</span>
+                            <span class="h5 font-weight-bold text-primary font-monospace" id="portal-or-number">Pending Official Receipt</span>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="window.print()">Print Official Enrollment Slip</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer mt-5" id="contact-footer">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-lg-5 mb-4 mb-lg-0">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="rics-logo.png" alt="RICS Logo" style="height: 46px; width: 46px; object-fit: contain; margin-right: 12px;">
+                        <div>
+                            <h6 class="mb-0 text-white font-weight-bold">REDEEMED IN CHRIST SCHOOL</h6>
+                            <small style="color: #94a3b8; font-size: 0.72rem;">ESTABLISHED 1976</small>
+                        </div>
+                    </div>
+                    <p class="small pr-4">We exist to provide quality Christian education, empowering students to grow academically and spiritually to meet global challenges.</p>
+                    <div class="small">📍 265 C.M Recto Street Parang Marikina City</div>
+                    <div class="small">📞 +63 2 8942 1234 / admissions@rics.edu.ph</div>
+                </div>
+                <div class="col-lg-3 mb-4 mb-lg-0">
+                    <h6>ADMISSIONS</h6>
+                    <a href="requirements.html">Requirements Guide</a>
+                    <a href="enrollment.html">Slot Inquiries</a>
+                    <a href="enrollment.html">Enrollment Fees</a>
+                    <a href="#">ESC Subsidy</a>
+                </div>
+                <div class="col-lg-4">
+                    <h6>CAMPUS LOCATION</h6>
+                    <div class="rounded overflow-hidden border border-secondary" style="height: 140px;">
+                        <img src="map.png" alt="RICS Marikina Campus Location Map" class="img-fluid w-100 h-100" style="object-fit: cover; display: block;">
+                    </div>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <div class="text-center small text-white-50">
+                &copy; 2026 Redeemed in Christ School. All Rights Reserved. Powered by RIC Enrollment Management System.
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
+    <script>
+        const schedulesByTier = {
+            preschool: [
+                { time: "8:00 - 8:45", mon: "Devotion & Circle Time", tue: "Letters & Phonics", wed: "Number Play", thu: "Music & Rhymes", fri: "Storytelling" },
+                { time: "8:45 - 9:30", mon: "Sensory & Motor Play", tue: "Christian Values", wed: "Colors & Shapes", thu: "Arts & Crafts", fri: "Show & Tell" },
+                { time: "9:30 - 10:00", mon: "SNACK & RECESS", tue: "SNACK & RECESS", wed: "SNACK & RECESS", thu: "SNACK & RECESS", fri: "SNACK & RECESS" },
+                { time: "10:00 - 11:00", mon: "Free Play & Guided Rest", tue: "Character Formation", wed: "Social Play", thu: "Play Dough & Art", fri: "Homeroom Dismissal" }
+            ],
+            elementary: [
+                { time: "7:30 - 8:30", mon: "Bible & Character", tue: "Mathematics", wed: "English", thu: "Science", fri: "Homeroom Guidance" },
+                { time: "8:30 - 9:30", mon: "Science", tue: "Filipino", wed: "Mathematics", thu: "Filipino", fri: "MAPEH" },
+                { time: "9:30 - 10:00", mon: "RECESS BREAK", tue: "RECESS BREAK", wed: "RECESS BREAK", thu: "RECESS BREAK", fri: "RECESS BREAK" },
+                { time: "10:00 - 11:00", mon: "Araling Panlipunan", tue: "English Reading", wed: "EPP / ICT", thu: "Araling Panlipunan", fri: "Values Education" }
+            ],
+            junior: [
+                { time: "7:15 - 8:15", mon: "Christian Living", tue: "Algebra / Geometry", wed: "English Literature", thu: "Integrated Science", fri: "Flag & Homeroom" },
+                { time: "8:15 - 9:15", mon: "Science Laboratory", tue: "Filipino Panitikan", wed: "Advanced Math", thu: "Filipino Gramatika", fri: "MAPEH / P.E." },
+                { time: "9:15 - 9:45", mon: "RECESS", tue: "RECESS", wed: "RECESS", thu: "RECESS", fri: "RECESS" },
+                { time: "9:45 - 10:45", mon: "Araling Panlipunan (Economics)", tue: "TLE / Robotics", wed: "TLE / Cookery", thu: "Contemporary Issues", fri: "Christian Leadership" }
+            ]
+        };
+
+        $(document).ready(function() {
+            // Load Student Portal Data
+            $.getJSON('api.php?action=get_portal_data', function(resData) {
+                if (resData.success && resData.data) {
+                    const s = resData.data;
+                    $('#portal-student-name').text(`${s.first_name} ${s.last_name}`);
+                    $('#portal-section').text(`Section: ${s.section_name || 'Unassigned'} (${s.current_slots}/${s.max_capacity} slots left)`);
+                    $('#portal-grade-level').text(`Level: ${s.level_name}`);
+                    $('#portal-scheme').text(s.payment_scheme);
+                    $('#portal-method').text(s.payment_method);
+                    
+                    const total = parseFloat(s.total_amount || 0);
+                    const paid = parseFloat(s.amount_paid || 0);
+                    const bal = parseFloat(s.balance || 0);
+
+                    $('#portal-total-tuition').text('₱' + total.toLocaleString(undefined, {minimumFractionDigits: 2}));
+                    $('#portal-amount-paid').text('₱' + paid.toLocaleString(undefined, {minimumFractionDigits: 2}));
+                    $('#portal-remaining-balance').text('₱' + bal.toLocaleString(undefined, {minimumFractionDigits: 2}));
+
+                    const $statusBadge = $('#portal-payment-status');
+                    $statusBadge.text(s.payment_status);
+                    $statusBadge.attr('class', `badge badge-status ${s.payment_status === 'Fully Paid' ? 'badge-verified' : 'badge-pending'}`);
+                    $('#portal-or-number').text(s.receipt_number || 'Pending Official Receipt');
+
+                    // Render Schedule
+                    let tier = 'elementary';
+                    if (parseInt(s.grade_level_id) === 1 || parseInt(s.grade_level_id) === 2) {
+                        tier = 'preschool';
+                    } else if (parseInt(s.grade_level_id) >= 9) {
+                        tier = 'junior';
+                    }
+                    
+                    const $tbody = $('#portal-schedule-body');
+                    $tbody.empty();
+                    $.each(schedulesByTier[tier], function(i, r) {
+                        $tbody.append(`
+                            <tr>
+                                <td class="font-weight-bold">${r.time}</td>
+                                <td>${r.mon}</td>
+                                <td>${r.tue}</td>
+                                <td>${r.wed}</td>
+                                <td>${r.thu}</td>
+                                <td>${r.fri}</td>
+                            </tr>
+                        `);
+                    });
+
+                    // Render Document Checklist
+                    const $checkList = $('#portal-doc-checklist');
+                    $checkList.empty();
+                    $.each(s.documents, function(i, doc) {
+                        const isPassed = doc.status === 'Verified' || doc.status === 'Submitted';
+                        $checkList.append(`
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><input type="checkbox" ${isPassed ? 'checked' : ''} disabled class="mr-2"> ${doc.doc_type}</span>
+                                <span class="badge badge-pill ${isPassed ? 'badge-success' : 'badge-secondary'}">${doc.status}</span>
+                            </li>
+                        `);
+                    });
+                }
+            });
+
+            // Logout Function
+            $('#btn-logout').on('click', function() {
+                $.get('api.php?action=logout', function() {
+                    window.location.href = 'index.html';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

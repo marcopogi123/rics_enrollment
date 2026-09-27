@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Enrollment Application - Redeemed in Christ School</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center font-weight-bold text-dark" href="index.html">
+                <img src="rics-logo.png" alt="RICS Logo" style="height: 48px; width: 48px; object-fit: contain; margin-right: 12px;">
+                <div>
+                    <span class="d-block text-primary" style="font-size:1.05rem; font-weight: 700; line-height: 1;">Redeemed In Christ</span>
+                    <small class="text-muted" style="font-size:0.7rem; letter-spacing:0.04em;">SCHOOL ENROLLMENT PORTAL</small>
+                </div>
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link font-weight-medium" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link font-weight-medium" href="requirements.html">Admission Requirements</a></li>
+                    <li class="nav-item"><a class="nav-link font-weight-medium" href="enrollment.html">Enrollment</a></li>
+                    <li class="nav-item"><a class="nav-link font-weight-medium" href="#contact-footer">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link font-weight-medium" href="#contact-footer">Contact Us</a></li>
+                </ul>
+                <div class="form-inline" id="nav-auth-slot">
+                    <button class="btn btn-outline-dark rounded-pill px-4" onclick="$('#loginModal').modal('show')">Login</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ENROLLMENT WIZARD -->
+    <section id="enrollment-wizard" class="py-5">
+        <div class="container" style="max-width: 820px;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <span class="text-primary font-weight-bold small text-uppercase">Academic Year 2026-2027</span>
+                    <h2 class="font-weight-bold mb-0">Enrollment Application</h2>
+                    <small class="text-muted">Sections are automatically assigned (1 Section per level, max 30 slots)</small>
+                </div>
+                <div>
+                    <span class="step-pill active mr-1" id="step-ind-1">1</span>
+                    <span class="step-pill mr-1" id="step-ind-2">2</span>
+                    <span class="step-pill mr-1" id="step-ind-3">3</span>
+                    <span class="step-pill" id="step-ind-4">4</span>
+                </div>
+            </div>
+
+            <form id="enrollmentForm">
+                <!-- STEP 1: Student Information -->
+                <div class="card card-custom p-4 shadow-sm mb-4 bg-light" id="wizard-step-1">
+                    <h5 class="font-weight-bold mb-3">Student Information</h5>
+                    <div class="form-row">
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">First Name *</label><input type="text" id="reg_first_name" class="form-control" required placeholder="First name"></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Middle Name</label><input type="text" id="reg_middle_name" class="form-control" placeholder="Middle name"></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Last Name *</label><input type="text" id="reg_last_name" class="form-control" required placeholder="Last name"></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Nickname</label><input type="text" id="reg_nickname" class="form-control" placeholder="Nickname"></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">LRN (12 Digits) *</label><input type="text" id="reg_lrn" class="form-control" maxlength="12" required placeholder="12-digit LRN"></div>
+                        <div class="form-group col-md-4">
+                            <label class="small font-weight-bold">Grade Level *</label>
+                            <select id="reg_grade_level" class="form-control" required>
+                                <option value="" disabled selected>Select grade level</option>
+                                <optgroup label="Early Childhood">
+                                    <option value="1">Preschool</option>
+                                    <option value="2">Kindergarten</option>
+                                </optgroup>
+                                <optgroup label="Elementary School">
+                                    <option value="3">Grade 1</option>
+                                    <option value="4">Grade 2</option>
+                                    <option value="5">Grade 3</option>
+                                    <option value="6">Grade 4</option>
+                                    <option value="7">Grade 5</option>
+                                    <option value="8">Grade 6</option>
+                                </optgroup>
+                                <optgroup label="Junior High School">
+                                    <option value="9">Grade 7 (Junior High)</option>
+                                    <option value="10">Grade 8 (Junior High)</option>
+                                    <option value="11">Grade 9 (Junior High)</option>
+                                    <option value="12">Grade 10 (Junior High)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Date of Birth *</label><input type="date" id="reg_dob" class="form-control" required></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Place of Birth *</label><input type="text" id="reg_pob" class="form-control" required placeholder="e.g. Marikina City"></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Gender *</label>
+                            <select id="reg_gender" class="form-control" required>
+                                <option value="" disabled selected>Select gender</option>
+                                <option>Male</option>
+                                <option>Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label class="small font-weight-bold">Choose Religion *</label>
+                            <select id="reg_religion" class="form-control" required>
+                                <option value="" disabled selected>Select Religion</option>
+                                <option value="Roman Catholic">Roman Catholic</option>
+                                <option value="Christian (Born Again / Protestant)">Christian (Born Again / Protestant)</option>
+                                <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
+                                <option value="Seventh-day Adventist">Seventh-day Adventist</option>
+                                <option value="Baptist">Baptist</option>
+                                <option value="Islam">Islam</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">General Average</label><input type="number" step="0.1" id="reg_average" class="form-control" placeholder="e.g. 88.5"></div>
+                        <div class="form-group col-md-4"><label class="small font-weight-bold">Transferee?</label>
+                            <select id="reg_transferee" class="form-control">
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6"><label class="small font-weight-bold">Former School</label><input type="text" id="reg_former" class="form-control" placeholder="Previous school attended"></div>
+                        <div class="form-group col-md-6"><label class="small font-weight-bold">Contact Number *</label><input type="text" id="reg_contact" class="form-control" required placeholder="09xxxxxxxxx"></div>
+                        <div class="form-group col-12"><label class="small font-weight-bold">Present Address *</label><input type="text" id="reg_address" class="form-control" required placeholder="House No., Street, Barangay, City"></div>
+                    </div>
+                    <div class="text-right mt-3">
+                        <button type="button" class="btn btn-rics-primary px-4" id="btn-next-2">Next &rarr;</button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Emergency & Medical Information -->
+                <div class="card card-custom p-4 shadow-sm mb-4 bg-light d-none" id="wizard-step-2">
+                    <h5 class="font-weight-bold mb-3">Emergency & Medical Information</h5>
+                    <div class="form-row">
+                        <div class="form-group col-md-6"><label class="small font-weight-bold">Emergency Contact Person *</label><input type="text" id="reg_emer_name" class="form-control" placeholder="Parent or guardian full name"></div>
+                        <div class="form-group col-md-3"><label class="small font-weight-bold">Relationship *</label><input type="text" id="reg_emer_rel" class="form-control" placeholder="e.g. Mother / Father"></div>
+                        <div class="form-group col-md-3"><label class="small font-weight-bold">Contact No. *</label><input type="text" id="reg_emer_contact" class="form-control" placeholder="09xxxxxxxxx"></div>
+                        <div class="form-group col-12"><label class="small font-weight-bold">Emergency Address *</label><input type="text" id="reg_emer_address" class="form-control" placeholder="Complete address"></div>
+                        <div class="form-group col-md-6"><label class="small font-weight-bold">Known Illnesses / Surgical History</label><input type="text" id="reg_illnesses" class="form-control" placeholder="None or list conditions"></div>
+                        <div class="form-group col-md-6"><label class="small font-weight-bold">Known Allergies</label><input type="text" id="reg_allergies" class="form-control" placeholder="None or list allergies"></div>
+                        <div class="form-group col-12">
+                            <label class="small font-weight-bold d-block">Medications Allowed (Check all that apply)</label>
+                            <div class="form-check form-check-inline mr-3"><input class="form-check-input otc-checkbox" type="checkbox" name="otc" value="Biogesic" id="otc1"><label class="form-check-label small" for="otc1">Biogesic</label></div>
+                            <div class="form-check form-check-inline mr-3"><input class="form-check-input otc-checkbox" type="checkbox" name="otc" value="Bioflu" id="otc2"><label class="form-check-label small" for="otc2">Bioflu</label></div>
+                            <div class="form-check form-check-inline mr-3"><input class="form-check-input otc-checkbox" type="checkbox" name="otc" value="Diatabs" id="otc3"><label class="form-check-label small" for="otc3">Diatabs</label></div>
+                            <div class="form-check form-check-inline mr-3"><input class="form-check-input otc-checkbox" type="checkbox" name="otc" value="Bonamin" id="otc4"><label class="form-check-label small" for="otc4">Bonamin</label></div>
+                            <div class="form-check form-check-inline mr-3"><input class="form-check-input otc-checkbox" type="checkbox" name="otc" value="Decolgen" id="otc5"><label class="form-check-label small" for="otc5">Decolgen</label></div>
+                            <div class="form-check form-check-inline mr-3"><input class="form-check-input otc-checkbox" type="checkbox" name="otc" value="Neozep" id="otc6"><label class="form-check-label small" for="otc6">Neozep</label></div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="button" class="btn btn-outline-secondary px-4 btn-back" data-step="1" style="border-radius: 50px;">&larr; Back</button>
+                        <button type="button" class="btn btn-rics-primary px-4 btn-next" data-step="3">Next &rarr;</button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Payment Scheme -->
+                <div class="card card-custom p-4 shadow-sm mb-4 bg-light d-none" id="wizard-step-3">
+                    <h5 class="font-weight-bold mb-1">Payment Plan & Terms</h5>
+                    <p class="text-muted small mb-4">Select preferred installment terms and payment channel.</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="font-weight-bold small">Step 1: Choose a Payment Scheme</label>
+                            <div class="list-group mb-3">
+                                <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
+                                    <span><input type="radio" name="payment_scheme" value="Annually" checked class="scheme-radio"> Annually (No Surcharge)</span>
+                                    <b>₱45,000.00</b>
+                                </label>
+                                <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
+                                    <span><input type="radio" name="payment_scheme" value="Semi-Annually" class="scheme-radio"> Semi-Annually</span>
+                                    <b>₱46,000.00</b>
+                                </label>
+                                <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
+                                    <span><input type="radio" name="payment_scheme" value="Quarterly" class="scheme-radio"> Quarterly</span>
+                                    <b>₱47,000.00</b>
+                                </label>
+                                <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
+                                    <span><input type="radio" name="payment_scheme" value="Monthly" class="scheme-radio"> Monthly</span>
+                                    <b>₱48,000.00</b>
+                                </label>
+                            </div>
+
+                            <label class="font-weight-bold small">Step 2: Payment Method</label>
+                            <div>
+                                <label class="mr-3"><input type="radio" name="pay_method" value="Cash" checked> Cash Payment at Cashier</label>
+                                <label><input type="radio" name="pay_method" value="GCash"> GCash Transfer</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card p-3 border-0 bg-white shadow-sm h-100" style="border-radius: 12px;">
+                                <h6 class="font-weight-bold">Payment Terms Breakdown</h6>
+                                <p class="small text-muted mb-2" id="breakdown-desc">Full Payment: ₱45,000.00 due upon enrollment.</p>
+                                <div class="bg-light p-3 rounded small text-secondary">
+                                    <div><b>GCash Number:</b> 0917-894-2123</div>
+                                    <div><b>Account Name:</b> RICS PAYMENT</div>
+                                    <div class="mt-2 text-dark font-monospace" style="font-size:0.75rem;">Proceed to Cashier to finalize enrollment and acquire official receipt.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary px-4 btn-back" data-step="2" style="border-radius: 50px;">&larr; Back</button>
+                        <button type="button" class="btn btn-rics-primary px-4 btn-next" data-step="4">Next &rarr;</button>
+                    </div>
+                </div>
+
+                <!-- STEP 4: Portal Account Credentials -->
+                <div class="card card-custom p-4 shadow-sm mb-4 bg-light d-none" id="wizard-step-4">
+                    <h5 class="font-weight-bold mb-3">Portal Credentials</h5>
+                    <p class="text-muted small">Create credentials for the Student / Parent dashboard.</p>
+                    <div style="max-width:460px;">
+                        <div class="form-group"><label class="small font-weight-bold">Create Username (Surname first) *</label><input type="text" id="reg_username" class="form-control" placeholder="e.g. DelaCruz_Juan" required></div>
+                        <div class="form-group"><label class="small font-weight-bold">Email Address *</label><input type="email" id="reg_email" class="form-control" placeholder="name@example.com" required></div>
+                        <div class="form-group"><label class="small font-weight-bold">Create a Password *</label><input type="password" id="reg_password" class="form-control" placeholder="Min. 6 characters" required></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary px-4 btn-back" data-step="3" style="border-radius: 50px;">&larr; Back</button>
+                        <button type="submit" class="btn btn-success px-5 font-weight-bold" style="border-radius: 50px;">Submit Enrollment Application</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- SIGN-IN MODAL -->
+    <div class="modal fade" id="loginModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width:420px;">
+            <div class="modal-content border-0 p-4 shadow" style="border-radius: 20px;">
+                <div class="modal-body p-0 text-center">
+                    <img src="rics-logo.png" alt="RICS Logo" style="width: 72px; height: 72px; object-fit: contain;" class="mb-3">
+                    <h4 class="font-weight-bold mb-3" style="color:var(--rics-navy);">Portal Login</h4>
+                    <form id="loginForm" class="text-left">
+                        <div class="form-group mb-3">
+                            <label class="small font-weight-bold">Username or Email</label>
+                            <input type="text" id="login_username" class="form-control" required placeholder="Enter username or email">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="small font-weight-bold">Password</label>
+                            <input type="password" id="login_password" class="form-control" required placeholder="Enter password">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-rics-primary btn-block mb-2">Continue</button>
+                        <div class="text-center mt-3">
+                            <small class="text-muted d-block">Default Staff Passwords: <code>Password123</code></small>
+                            <small class="text-muted d-block">Roles: <code>cashier_staff</code> | <code>registrar_staff</code></small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer mt-5" id="contact-footer">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-lg-5 mb-4 mb-lg-0">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="rics-logo.png" alt="RICS Logo" style="height: 46px; width: 46px; object-fit: contain; margin-right: 12px;">
+                        <div>
+                            <h6 class="mb-0 text-white font-weight-bold">REDEEMED IN CHRIST SCHOOL</h6>
+                            <small style="color: #94a3b8; font-size: 0.72rem;">ESTABLISHED 1976</small>
+                        </div>
+                    </div>
+                    <p class="small pr-4">We exist to provide quality Christian education, empowering students to grow academically and spiritually to meet global challenges.</p>
+                    <div class="small">📍 265 C.M Recto Street Parang Marikina City</div>
+                    <div class="small">📞 +63 2 8942 1234 / admissions@rics.edu.ph</div>
+                </div>
+                <div class="col-lg-3 mb-4 mb-lg-0">
+                    <h6>ADMISSIONS</h6>
+                    <a href="requirements.html">Requirements Guide</a>
+                    <a href="enrollment.html">Slot Inquiries</a>
+                    <a href="enrollment.html">Enrollment Fees</a>
+                    <a href="#">ESC Subsidy</a>
+                </div>
+                <div class="col-lg-4">
+                    <h6>CAMPUS LOCATION</h6>
+                    <div class="rounded overflow-hidden border border-secondary" style="height: 140px;">
+                        <img src="map.png" alt="RICS Marikina Campus Location Map" class="img-fluid w-100 h-100" style="object-fit: cover; display: block;">
+                    </div>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <div class="text-center small text-white-50">
+                &copy; 2026 Redeemed in Christ School. All Rights Reserved. Powered by RIC Enrollment Management System.
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Wizard Navigation Function
+            function goToStep(step) {
+                $('[id^="wizard-step-"]').addClass('d-none');
+                $('.step-pill').removeClass('active');
+                $('#wizard-step-' + step).removeClass('d-none');
+                for (let j = 1; j <= step; j++) {
+                    $('#step-ind-' + j).addClass('active');
+                }
+            }
+
+            // Step 1 Validation
+            $('#btn-next-2').on('click', function() {
+                const reqIds = ['#reg_first_name', '#reg_last_name', '#reg_lrn', '#reg_grade_level', '#reg_dob', '#reg_pob', '#reg_gender', '#reg_religion', '#reg_contact', '#reg_address'];
+                let valid = true;
+                $.each(reqIds, function(i, sel) {
+                    if (!$(sel).val().trim()) {
+                        alert('Please complete all required fields (including Religion) before proceeding.');
+                        $(sel).focus();
+                        valid = false;
+                        return false;
+                    }
+                });
+                if (valid) goToStep(2);
+            });
+
+            // Standard Step Buttons
+            $('.btn-next').on('click', function() { goToStep($(this).data('step')); });
+            $('.btn-back').on('click', function() { goToStep($(this).data('step')); });
+
+            // Payment Scheme Update
+            $('.scheme-radio').on('change', function() {
+                const scheme = $(this).val();
+                const $box = $('#breakdown-desc');
+                if (scheme === 'Annually') $box.html("<b>Full Payment: ₱45,000.00</b> due upon enrollment (0% Surcharge).");
+                else if (scheme === 'Semi-Annually') $box.html("<b>1st Installment: ₱23,000.00</b> (Upon Enrollment)<br><b>2nd Installment: ₱23,000.00</b> (Before Midterms).");
+                else if (scheme === 'Quarterly') $box.html("<b>4 Installments: ₱11,750.00</b> payable every grading period.");
+                else if (scheme === 'Monthly') $box.html("<b>Downpayment: ₱8,000.00</b>, followed by ₱4,000.00 monthly installments.");
+            });
+
+            // Submit Enrollment
+            $('#enrollmentForm').on('submit', function(e) {
+                e.preventDefault();
+                const payload = {
+                    first_name: $('#reg_first_name').val().trim(),
+                    middle_name: $('#reg_middle_name').val().trim(),
+                    last_name: $('#reg_last_name').val().trim(),
+                    nickname: $('#reg_nickname').val().trim(),
+                    lrn: $('#reg_lrn').val().trim(),
+                    grade_level_id: $('#reg_grade_level').val(),
+                    date_of_birth: $('#reg_dob').val(),
+                    place_of_birth: $('#reg_pob').val().trim(),
+                    gender: $('#reg_gender').val(),
+                    religion: $('#reg_religion').val(),
+                    contact_no: $('#reg_contact').val().trim(),
+                    present_address: $('#reg_address').val().trim(),
+                    is_transferee: $('#reg_transferee').val(),
+                    former_school: $('#reg_former').val().trim(),
+                    average: $('#reg_average').val() || null,
+                    emer_name: $('#reg_emer_name').val().trim(),
+                    emer_rel: $('#reg_emer_rel').val().trim(),
+                    emer_contact: $('#reg_emer_contact').val().trim(),
+                    emer_address: $('#reg_emer_address').val().trim(),
+                    illnesses: $('#reg_illnesses').val().trim(),
+                    allergies: $('#reg_allergies').val().trim(),
+                    allowed_meds: $('.otc-checkbox:checked').map(function(){ return $(this).val(); }).get(),
+                    payment_scheme: $('input[name="payment_scheme"]:checked').val(),
+                    payment_method: $('input[name="pay_method"]:checked').val(),
+                    username: $('#reg_username').val().trim(),
+                    email: $('#reg_email').val().trim(),
+                    password: $('#reg_password').val()
+                };
+
+                $.ajax({
+                    url: 'api.php?action=submit_enrollment',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function(data) {
+                        if (data.success) {
+                            alert('Student successfully registered and section assigned! Loading dashboard.');
+                            window.location.href = 'student-dashboard.html';
+                        } else {
+                            alert('Registration error: ' + data.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Error submitting enrollment.');
+                    }
+                });
+            });
+
+            // Login Modal
+            $('#loginForm').on('submit', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: 'api.php?action=login',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        login_id: $('#login_username').val().trim(),
+                        password: $('#login_password').val().trim()
+                    }),
+                    success: function(data) {
+                        if (data.success) {
+                            window.location.href = data.role === 'student' ? 'student-dashboard.html' : 'staff-dashboard.html';
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
