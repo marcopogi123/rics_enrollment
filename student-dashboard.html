@@ -92,6 +92,14 @@
                         <h6 class="font-weight-bold mb-2">Billing & Official Receipt Summary</h6>
                         <p class="small text-muted mb-1">Payment Scheme: <b id="portal-scheme">---</b></p>
                         <p class="small text-muted mb-3">Payment Method: <b id="portal-method">---</b></p>
+
+                        <div class="alert alert-info small">
+                            <strong>Current installment:</strong>
+                            <span id="portal-installment">Loading</span><br>
+                            <strong>Status:</strong>
+                            <span id="portal-installment-status">Loading</span>
+                        </div>
+
                         <div class="p-3 bg-light rounded text-center mb-3">
                             <span class="text-secondary small d-block">Official Receipt Number</span>
                             <span class="h5 font-weight-bold text-primary font-monospace" id="portal-or-number">Pending Official Receipt</span>
@@ -166,6 +174,76 @@
             ]
         };
 
+        //schedule 
+
+        function getInstallmentSchedule(scheme) {
+            const schedules = {
+                'Annually': [
+                    { label: 'Upon Enrollment', amount: 45000, dueDate: null }
+                ],
+                'Semi-Annually': [
+                    { label: 'Upon Enrollment', amount: 23017.50, dueDate: null },
+                    { label: '1st week of December', amount: 23017.50, dueDate: new Date(2026, 11, 8) }
+                ],
+                'Quarterly': [
+                    { label: 'Upon Enrollment', amount: 11620.13, dueDate: null },
+                    { label: '1st week of October', amount: 11620.13, dueDate: new Date(2026, 9, 8) },
+                    { label: '1st week of December', amount: 11620.12, dueDate: new Date(2026, 11, 8) },
+                    { label: '1st week of February', amount: 11620.12, dueDate: new Date(2027, 1, 8) }
+                ],
+                'Monthly': [
+                    { label: 'Upon Enrollment', amount: 5263, dueDate: null },
+                    { label: '1st week of July', amount: 5263, dueDate: new Date(2026, 6, 8) },
+                    { label: '1st week of August', amount: 5263, dueDate: new Date(2026, 7, 8) },
+                    { label: '1st week of September', amount: 5263, dueDate: new Date(2026, 8, 8) },
+                    { label: '1st week of October', amount: 5263, dueDate: new Date(2026, 9, 8) },
+                    { label: '1st week of November', amount: 5263, dueDate: new Date(2026, 10, 8) },
+                    { label: '1st week of December', amount: 5263, dueDate: new Date(2026, 11, 8) },
+                    { label: '1st week of January', amount: 5263, dueDate: new Date(2027, 0, 8) },
+                    { label: '1st week of February', amount: 5263, dueDate: new Date(2027, 1, 8) }
+                ]
+            };
+
+            return schedules[scheme] || [];
+}
+
+        function showCurrentInstallment(scheme, amountPaid) {
+            const installments = getInstallmentSchedule(scheme);
+            let paidCents = Math.round(amountPaid * 100);
+            const today = new Date();
+
+            for (const installment of installments) {
+                const installmentCents = Math.round(installment.amount * 100);
+                const appliedCents = Math.min(paidCents, installmentCents);
+                paidCents -= appliedCents;
+
+                const remainingCents = installmentCents - appliedCents;
+
+                if (remainingCents > 0) {
+                    const isOverdue = installment.dueDate && today >= installment.dueDate;
+                    let status = appliedCents > 0 ? 'Partially Paid' : 'Unpaid';
+
+                    if (isOverdue) {
+                        status += ' — Overdue';
+                    }
+
+                    const remaining = (remainingCents / 100).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                    $('#portal-installment').text(
+                        `${installment.label} — Remaining: ₱${remaining}`
+                    );
+                    $('#portal-installment-status').text(status);
+                    return;
+                }
+            }
+
+            $('#portal-installment').text('All scheduled installments');
+            $('#portal-installment-status').text('Fully Paid');
+}
+
         $(document).ready(function() {
             // Load Student Portal Data
             $.getJSON('api.php?action=get_portal_data', function(resData) {
@@ -189,6 +267,7 @@
                     $statusBadge.text(s.payment_status);
                     $statusBadge.attr('class', `badge badge-status ${s.payment_status === 'Fully Paid' ? 'badge-verified' : 'badge-pending'}`);
                     $('#portal-or-number').text(s.receipt_number || 'Pending Official Receipt');
+                    showCurrentInstallment(s.payment_scheme, paid);
 
                     // Render Schedule
                     let tier = 'elementary';

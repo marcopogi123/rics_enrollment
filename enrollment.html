@@ -167,15 +167,15 @@
                                 </label>
                                 <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
                                     <span><input type="radio" name="payment_scheme" value="Semi-Annually" class="scheme-radio"> Semi-Annually</span>
-                                    <b>₱46,000.00</b>
+                                    <b>₱46,035.00</b>
                                 </label>
                                 <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
                                     <span><input type="radio" name="payment_scheme" value="Quarterly" class="scheme-radio"> Quarterly</span>
-                                    <b>₱47,000.00</b>
+                                    <b>₱46,480.50</b>
                                 </label>
                                 <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
                                     <span><input type="radio" name="payment_scheme" value="Monthly" class="scheme-radio"> Monthly</span>
-                                    <b>₱48,000.00</b>
+                                    <b>₱47,367.00</b>
                                 </label>
                             </div>
 
@@ -325,11 +325,37 @@
             $('.scheme-radio').on('change', function() {
                 const scheme = $(this).val();
                 const $box = $('#breakdown-desc');
-                if (scheme === 'Annually') $box.html("<b>Full Payment: ₱45,000.00</b> due upon enrollment (0% Surcharge).");
-                else if (scheme === 'Semi-Annually') $box.html("<b>1st Installment: ₱23,000.00</b> (Upon Enrollment)<br><b>2nd Installment: ₱23,000.00</b> (Before Midterms).");
-                else if (scheme === 'Quarterly') $box.html("<b>4 Installments: ₱11,750.00</b> payable every grading period.");
-                else if (scheme === 'Monthly') $box.html("<b>Downpayment: ₱8,000.00</b>, followed by ₱4,000.00 monthly installments.");
+
+                if (scheme === 'Annually') {
+                    $box.html(`
+                        <b>₱45,000.00</b> — Upon Enrollment<br>
+                        The ₱500 reservation payment is credited toward this amount.
+                    `);
+                } else if (scheme === 'Semi-Annually') {
+                    $box.html(`
+                        <b>₱23,017.50</b> — Upon Enrollment<br>
+                        <b>₱23,017.50</b> — 1st week of December<br>
+                        The ₱500 reservation payment is credited toward the first installment.
+                    `);
+                } else if (scheme === 'Quarterly') {
+                    $box.html(`
+                        <b>₱11,620.13</b> — Upon Enrollment<br>
+                        <b>₱11,620.13</b> — 1st week of October<br>
+                        <b>₱11,620.12</b> — 1st week of December<br>
+                        <b>₱11,620.12</b> — 1st week of February<br>
+                        The ₱500 reservation payment is credited toward the first installment.
+                    `);
+                } else if (scheme === 'Monthly') {
+                    $box.html(`
+                        <b>₱5,263.00</b> — Upon Enrollment<br>
+                        <b>₱5,263.00</b> — 1st week of July, August, September, October,
+                        November, December, January, and February<br>
+                        The ₱500 reservation payment is credited toward the first installment.
+                    `);
+                }
             });
+
+            $('.scheme-radio:checked').trigger('change');
 
             // Submit Enrollment
             $('#enrollmentForm').on('submit', function(e) {

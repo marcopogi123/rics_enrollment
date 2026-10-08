@@ -136,10 +136,6 @@ if ($action === 'submit_enrollment') {
         ]);
         $studentId = $pdo->lastInsertId();
 
-        // Deduct remaining slot from 30[cite: 3]
-        $dec = $pdo->prepare("UPDATE sections SET current_slots = current_slots - 1 WHERE section_id = ?");
-        $dec->execute([$sectionId]);
-
         // Emergency Information[cite: 3]
         $pStmt = $pdo->prepare("INSERT INTO parent_emergency_info 
             (student_id, emergency_contact_name, emergency_contact_number, emergency_relationship, emergency_address)
@@ -162,9 +158,9 @@ if ($action === 'submit_enrollment') {
         // Pricing Scheme[cite: 3]
         $schemes = [
             'Annually' => 45000.00,
-            'Semi-Annually' => 46000.00,
-            'Quarterly' => 47000.00,
-            'Monthly' => 48000.00
+            'Semi-Annually' => 46035.00,
+            'Quarterly' => 46480.50,
+            'Monthly' => 47367.00
         ];
         $totalAmount = $schemes[$d['payment_scheme']] ?? 45000.00;
 
@@ -309,6 +305,36 @@ if ($action === 'get_payment_history') {
     exit;
 }
 
+//reciever of that call on the staffdashboard from line 497
+if ($action === 'get_student_transactions'){
+    $studentId = (int)($_GET['student_id'] ?? 0);
+
+    if($studentId <=0){
+        echo json_encode([
+            'success' => false,
+            'message' => 'A valid Student ID is required.'
+        ]);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("
+    SELECT payment_timestamp, receipt_number, payment_method, amount_paid
+    FROM payment_transactions
+    WHERE student_id= ?
+    ORDER BY payment_timestamp DESC
+    ");
+
+    $stmt->execute([$studentId]);
+    
+    echo json_encode([
+        'success' => true, 
+        'transactions' => $stmt->fetchAll()
+    ]);
+    exit;
+}
+
+
+
 // Cashier Collect Payment & Record in Transaction History[cite: 3]
 if ($action === 'cashier_issue_receipt') {
     $d = json_decode(file_get_contents('php://input'), true);
@@ -318,12 +344,51 @@ if ($action === 'cashier_issue_receipt') {
 
     $pdo->beginTransaction();
     try {
-        $stmt = $pdo->prepare("SELECT balance, amount_paid, student_id, payment_method FROM payment_records WHERE payment_id = ? FOR UPDATE");
+        $stmt = $pdo->prepare("
+        SELECT p.balance, p.amount_paid, p.student_id, p.payment_method, s.section_id
+        FROM payment_records p
+        JOIN students s ON p.student_id = s.student_id
+        WHERE p.payment_id = ? 
+        FOR UPDATE
+        ");
         $stmt->execute([$payId]);
         $rec = $stmt->fetch();
 
         if (!$rec) {
             throw new Exception("Payment record not found.");
+        }
+
+        //added the reserve slot/downpayment of 500 pesos
+        if($amount <=0){
+            throw new Exception('Payment amount must be greater than Zero');
+        }
+
+        if($amount > (float)$rec['balance']){
+            throw new Exception("Payment cannot exceed the remaining balance");
+        }
+
+        $isFirstPayment = (float)$rec['amount_paid']<= 0;
+
+        if($isFirstPayment){
+            if($amount < 500){
+                throw new Exception("The first payment must be at least ₱500 to reserve a slot!");
+            }
+
+            if(!$rec['section_id']){
+                throw new Exception("This student does not have a section assigned");
+            }
+
+            $reserveStmt = $pdo->prepare("
+            UPDATE sections
+            SET current_slots = current_slots - 1
+            WHERE section_id = ? AND current_slots > 0
+            ");
+
+            $reserveStmt->execute([$rec['section_id']]);
+
+            if ($reserveStmt->rowCount() !== 1) {
+                throw new Exception("No slots remain in this section.");
+            }
         }
 
         $newPaid = $rec['amount_paid'] + $amount;

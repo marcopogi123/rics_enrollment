@@ -139,6 +139,64 @@
         </div>
     </section>
 
+        <!-- Payment Modal that appears when the user clicks on the row
+    Also where all the jQuery data like "$('#details-full-name').text($row.children('td').eq(1).text().trim());" goes to and transferred-->
+    
+    <div class="modal fade" id="studentDetailsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Student Payment Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <p><strong>Full Name:</strong> <span id="details-full-name">Select a student</span></p>
+                    <p><strong>LRN:</strong> <span id="details-lrn">---</span></p>
+                    <p><strong>Payment Status:</strong> <span id="details-payment-status">---</span></p>
+                    <p><strong>Mode of Payment:</strong> <span id="details-payment-method">---</span></p>
+                    <p><strong>Balance Remaining:</strong> <span id="details-balance">---</span></p>
+
+                    <div class="alert alert-info small">
+                        <strong>Current installment:</strong>
+                        <span id="details-installment">Loading...</span><br>
+                        <strong>Installment status:</strong>
+                        <span id="details-installment-status">Loading...</span>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="font-weight-bold">Transaction History</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Receipt</th>
+                                    <th>Method</th>
+                                    <th>Amount Paid</th>
+                                </tr>
+                            </thead>
+                            <tbody id="student-transaction-body">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        Select a student to view transactions.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- REGISTRAR REQUIREMENTS CHECKLIST MODAL -->
     <div class="modal fade" id="registrarDocModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -179,6 +237,9 @@
                         <div class="form-group mb-4">
                             <label class="small font-weight-bold">Amount to Collect (PHP)</label>
                             <input type="number" step="0.01" id="pay_amount" class="form-control" required placeholder="0.00">
+                            <small class="form-text text-muted">
+                            The first payment must be at least ₱500 to reserve the student’s section slot.
+                            </small>
                         </div>
                         <div class="d-flex justify-content-end border-top pt-3">
                             <button type="button" class="btn btn-secondary btn-sm px-4 mr-2" style="border-radius: 50px;" data-dismiss="modal">Cancel</button>
@@ -294,10 +355,14 @@
                     const tot = parseFloat(r.total_amount || 0);
                     
                     $tbody.append(`
-                        <tr>
+                        <tr class="student-row"
+                            data-student-id="${r.student_id}"
+                            data-payment-method="${r.payment_method || 'Not set'}"
+                            data-payment-scheme="${r.payment_scheme || ''}"
+                            data-amount-paid="${r.amount_paid || 0}">
                             <td><b>${r.lrn}</b></td>
                             <td>${r.full_name}</td>
-                            <td><span class="badge badge-light border">${r.level_name}</span></td>
+                            <td class="grade-cell"><span class="badge badge-light border">${r.level_name}</span></td>
                             <td>
                                 <b>${r.section_name || 'Unassigned'}</b><br>
                                 <small class="text-muted">${r.current_slots}/${r.max_capacity} slots remaining</small>
@@ -307,7 +372,7 @@
                             <td class="${bal > 0 ? 'text-danger font-weight-bold' : 'text-success'}">₱${bal.toLocaleString()}</td>
                             <td><span class="badge ${r.payment_status === 'Fully Paid' ? 'badge-success' : 'badge-info'}">${r.payment_status}</span></td>
                             <td><code>${r.receipt_number || 'Pending'}</code></td>
-                            <td>
+                            <td class="action-cell">
                                 <div>
                                     ${(currentRole === 'registrar' || currentRole === 'admin') ? 
                                         `<button class="btn btn-sm btn-outline-primary py-0 px-2 mr-1 btn-checklist" data-id="${r.student_id}" data-name="${r.full_name.replace(/'/g, "\\'")}" data-lrn="${r.lrn}">Checklist</button>` : ''
@@ -323,6 +388,75 @@
                 });
             });
         }
+        
+        //next payment template
+        function getInstallmentSchedule(scheme) {
+            const schedules = {
+                'Annually': [
+                    { label: 'Upon Enrollment', amount: 45000, dueDate: null }
+                ],
+                'Semi-Annually': [
+                    { label: 'Upon Enrollment', amount: 23017.50, dueDate: null },
+                    { label: '1st week of December', amount: 23017.50, dueDate: new Date(2026, 11, 8) }
+                ],
+                'Quarterly': [
+                    { label: 'Upon Enrollment', amount: 11620.13, dueDate: null },
+                    { label: '1st week of October', amount: 11620.13, dueDate: new Date(2026, 9, 8) },
+                    { label: '1st week of December', amount: 11620.12, dueDate: new Date(2026, 11, 8) },
+                    { label: '1st week of February', amount: 11620.12, dueDate: new Date(2027, 1, 8) }
+                ],
+                'Monthly': [
+                    { label: 'Upon Enrollment', amount: 5263, dueDate: null },
+                    { label: '1st week of July', amount: 5263, dueDate: new Date(2026, 6, 8) },
+                    { label: '1st week of August', amount: 5263, dueDate: new Date(2026, 7, 8) },
+                    { label: '1st week of September', amount: 5263, dueDate: new Date(2026, 8, 8) },
+                    { label: '1st week of October', amount: 5263, dueDate: new Date(2026, 9, 8) },
+                    { label: '1st week of November', amount: 5263, dueDate: new Date(2026, 10, 8) },
+                    { label: '1st week of December', amount: 5263, dueDate: new Date(2026, 11, 8) },
+                    { label: '1st week of January', amount: 5263, dueDate: new Date(2027, 0, 8) },
+                    { label: '1st week of February', amount: 5263, dueDate: new Date(2027, 1, 8) }
+                ]
+            };
+
+            return schedules[scheme] || [];
+}
+        //next payment date function --connected tong function na to sa taas
+        function showCurrentInstallment(scheme, amountPaid) {
+            const installments = getInstallmentSchedule(scheme);
+            let paidCents = Math.round(amountPaid * 100);
+            const today = new Date();
+
+            for (const installment of installments) {
+                const installmentCents = Math.round(installment.amount * 100);
+                const appliedCents = Math.min(paidCents, installmentCents);
+                paidCents -= appliedCents;
+
+                const remainingCents = installmentCents - appliedCents;
+
+                if (remainingCents > 0) {
+                    const isOverdue = installment.dueDate && today >= installment.dueDate;
+                    let status = appliedCents > 0 ? 'Partially Paid' : 'Unpaid';
+
+                    if (isOverdue) {
+                        status += ' — Overdue';
+                    }
+
+                    const remaining = (remainingCents / 100).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                    $('#details-installment').text(
+                        `${installment.label} — Remaining: ₱${remaining}`
+                    );
+                    $('#details-installment-status').text(status);
+                    return;
+                }
+            }
+
+            $('#details-installment').text('All scheduled installments');
+            $('#details-installment-status').text('Fully Paid');
+}
 
         $(document).ready(function() {
             // Check active session role first. For demo, setting as "admin".
@@ -338,6 +472,62 @@
             fetchStaffRecords();
 
             // Event Listeners
+
+            //dont fucking touch this pls WAHAHAHAHA
+            $(document).on('click', '.student-row td:not(.grade-cell):not(.action-cell)', function() { //makes it so that it clicks on the row except for grade level and action cell
+                const $row = $(this).closest('.student-row');
+                const studentId = $row.data('student-id');
+                const paymentScheme = $row.data('payment-scheme');
+                const amountPaid = parseFloat($row.data('amount-paid')) || 0;
+
+
+                $('#details-full-name').text($row.children('td').eq(1).text().trim());
+                $('#details-lrn').text($row.children('td').eq(0).text().trim());
+                $('#details-payment-status').text($row.children('td').eq(7).text().trim()); //gets the details 
+                $('#details-payment-method').text($row.data('payment-method'));
+                $('#details-balance').text($row.children('td').eq(6).text().trim());
+
+                showCurrentInstallment(paymentScheme, amountPaid);
+
+                $('#studentDetailsModal').modal('show');
+                const $transactions = $('#student-transaction-body');
+                $transactions.html(
+                    '<tr><td colspan="4" class= "text-center">Loading Transaction</td></tr>'
+                );
+                //this calls the api on line 308 to get the student transactions to display the transaction details
+                $.getJSON('api.php',{
+                    action: 'get_student_transactions',
+                    student_id: studentId
+
+                }, function(data){
+                    $transactions.empty();
+
+                    if(!data.success || data.transactions.length === 0){
+                        $transactions.append(
+                            '<tr><td colspan = "4" class= "text-center"> No transaction yet</td></tr>'
+                        );
+                        return
+                    }
+
+                    
+                    $.each(data.transactions, function(i, transaction){
+                        const $row = $('<tr>');
+
+                        $row.append($('<td>').text(transaction.payment_timestamp));
+                        $row.append($('<td>').text(transaction.receipt_number));
+                        $row.append($('<td>').text(transaction.payment_method));
+                        $row.append($('<td>').text('₱' + transaction.amount_paid));
+                        
+                        $transactions.append($row);
+                    });
+                }).fail(function(){
+                    $transactions.html(
+                        '<tr><td colspan="4" class= "text-center text-danger">Could not load transaction data</td></tr>'
+                    );
+                });
+                
+            });
+
             $('#filter_grade_level').on('change', fetchStaffRecords);
             
             $('.btn-hist-filter').on('click', function() {
