@@ -101,10 +101,6 @@
                             <input type="password" id="login_password" class="form-control" required placeholder="Enter password">
                         </div>
                         <button type="submit" class="btn btn-primary btn-rics-primary btn-block mb-2">Continue</button>
-                        <div class="text-center mt-3">
-                            <small class="text-muted d-block">Default Staff Passwords: <code>Password123</code></small>
-                            <small class="text-muted d-block">Roles: <code>cashier_staff</code> | <code>registrar_staff</code></small>
-                        </div>
                     </form>
                 </div>
             </div>
@@ -165,13 +161,13 @@
             // Requirements Tab functionality
             $('.req-tab-btn').on('click', function() {
                 const tabKey = $(this).data('tab');
-                
+
                 $('.req-tab-btn').removeClass('btn-dark').addClass('btn-outline-secondary');
                 $(this).removeClass('btn-outline-secondary').addClass('btn-dark');
-                
+
                 const data = admissionData[tabKey];
                 $('#req-tab-title').text(data.title);
-                
+
                 const $container = $('#req-checklist-container');
                 $container.empty();
                 $.each(data.items, function(index, item) {

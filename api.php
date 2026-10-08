@@ -17,7 +17,7 @@ try {
     exit;
 }
 
-// Auto-provision default staff accounts[cite: 3]
+// Auto-provision default staff accounts
 function verifyAndProvisionStaff($pdo) {
     $staff = [
         ['username' => 'cashier_staff', 'email' => 'cashier@rics.edu.ph', 'role' => 'cashier'],
@@ -37,9 +37,23 @@ function verifyAndProvisionStaff($pdo) {
 }
 verifyAndProvisionStaff($pdo);
 
+// Stops the request unless the logged-in user has one of the allowed roles.
+function require_role(array $roles) {
+    if (!isset($_SESSION['user_id'], $_SESSION['role'])) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Please log in first.']);
+        exit;
+    }
+    if (!in_array($_SESSION['role'], $roles, true)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'You do not have permission to do that.']);
+        exit;
+    }
+}
+
 $action = $_GET['action'] ?? '';
 
-// Check User Session[cite: 3]
+// Check User Session
 if ($action === 'check_session') {
     if (isset($_SESSION['user_id'])) {
         echo json_encode([
@@ -54,7 +68,7 @@ if ($action === 'check_session') {
     exit;
 }
 
-// User Authentication[cite: 3]
+// User Authentication
 if ($action === 'login') {
     $data = json_decode(file_get_contents('php://input'), true);
     $login_id = trim($data['login_id'] ?? '');
@@ -64,30 +78,27 @@ if ($action === 'login') {
     $stmt->execute([$login_id, $login_id]);
     $u = $stmt->fetch();
 
-    if ($u) {
-        $isValid = password_verify($password, $u['password_hash']) || ($password === 'Password123');
-
-        if ($isValid) {
-            $_SESSION['user_id'] = $u['user_id'];
-            $_SESSION['role'] = $u['role'];
-            $_SESSION['username'] = $u['username'];
-            echo json_encode(['success' => true, 'role' => $u['role'], 'username' => $u['username']]);
-            exit;
-        }
+    if ($u && password_verify($password, $u['password_hash'])) {
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = $u['user_id'];
+        $_SESSION['role'] = $u['role'];
+        $_SESSION['username'] = $u['username'];
+        echo json_encode(['success' => true, 'role' => $u['role'], 'username' => $u['username']]);
+        exit;
     }
 
     echo json_encode(['success' => false, 'message' => 'Invalid username or password.']);
     exit;
 }
 
-// User Logout[cite: 3]
+// User Logout
 if ($action === 'logout') {
     session_destroy();
     echo json_encode(['success' => true]);
     exit;
 }
 
-// Submit Full Enrollment Wizard with Automatic Section Assignment (Capped at 30)[cite: 3]
+// Submit Full Enrollment Wizard with Automatic Section Assignment (Capped at 30)
 if ($action === 'submit_enrollment') {
     $d = json_decode(file_get_contents('php://input'), true);
     $pdo->beginTransaction();
@@ -118,13 +129,13 @@ if ($action === 'submit_enrollment') {
 
         $sectionId = $assignedSection['section_id'];
 
-        // Create Portal User[cite: 3]
+        // Create Portal User
         $pwdHash = password_hash($d['password'], PASSWORD_BCRYPT);
         $uStmt = $pdo->prepare("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, 'student')");
         $uStmt->execute([$d['username'], $d['email'], $pwdHash]);
         $newUserId = $pdo->lastInsertId();
 
-        // Create Student Profile with Religion[cite: 3]
+        // Create Student Profile with Religion
         $sStmt = $pdo->prepare("INSERT INTO students 
             (user_id, lrn, date_of_registration, grade_level_id, section_id, last_name, first_name, middle_name, nickname, date_of_birth, place_of_birth, gender, religion, contact_no, present_address, is_transferee, former_elementary_school, general_average, enrollment_status)
             VALUES (?, ?, CURDATE(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Payment Verification')");
@@ -136,26 +147,26 @@ if ($action === 'submit_enrollment') {
         ]);
         $studentId = $pdo->lastInsertId();
 
-        // Emergency Information[cite: 3]
+        // Emergency Information
         $pStmt = $pdo->prepare("INSERT INTO parent_emergency_info 
             (student_id, emergency_contact_name, emergency_contact_number, emergency_relationship, emergency_address)
             VALUES (?, ?, ?, ?, ?)");
         $pStmt->execute([$studentId, $d['emer_name'], $d['emer_contact'], $d['emer_rel'], $d['emer_address']]);
 
-        // Medical Details[cite: 3]
+        // Medical Details
         $mStmt = $pdo->prepare("INSERT INTO medical_records 
             (student_id, illnesses, allergies, allowed_medications, opt_out_otc, signature_name, signature_relation)
             VALUES (?, ?, ?, ?, ?, ?, ?)");
         $mStmt->execute([$studentId, $d['illnesses'], $d['allergies'], json_encode($d['allowed_meds']), 0, $d['emer_name'], $d['emer_rel']]);
 
-        // Requirements Checklist for Registrar[cite: 3]
+        // Requirements Checklist for Registrar
         $docs = ['Birth Certificate', 'Form 137', 'Good Moral', 'Report Card', 'ESC Certificate'];
         $docStmt = $pdo->prepare("INSERT INTO submitted_documents (student_id, doc_type, status) VALUES (?, ?, 'Pending')");
         foreach ($docs as $doc) {
             $docStmt->execute([$studentId, $doc]);
         }
 
-        // Pricing Scheme[cite: 3]
+        // Pricing Scheme
         $schemes = [
             'Annually' => 45000.00,
             'Semi-Annually' => 46035.00,
@@ -169,6 +180,7 @@ if ($action === 'submit_enrollment') {
 
         $pdo->commit();
 
+        session_regenerate_id(true);
         $_SESSION['user_id'] = $newUserId;
         $_SESSION['role'] = 'student';
         $_SESSION['username'] = $d['username'];
@@ -181,9 +193,10 @@ if ($action === 'submit_enrollment') {
     exit;
 }
 
-// Student Portal Profile Fetch[cite: 3]
+// Student Portal Profile Fetch
 if ($action === 'get_portal_data') {
-    $uid = $_SESSION['user_id'] ?? 0;
+    require_role(['student']);
+    $uid = $_SESSION['user_id'];
     $stmt = $pdo->prepare("
         SELECT s.*, g.level_name, sec.section_name, sec.current_slots, sec.max_capacity,
                p.payment_id, p.payment_scheme, p.payment_method, p.total_amount, p.amount_paid, p.balance, p.payment_status, p.receipt_number
@@ -207,8 +220,48 @@ if ($action === 'get_portal_data') {
     exit;
 }
 
+// Student Payment Records (FEATURE 3)
+// The student is identified ONLY by the login session. Any student_id sent
+// by the browser is ignored, so a student can never read another student's records.
+if ($action === 'get_my_payment_records') {
+    require_role(['student']);
+
+    $stmt = $pdo->prepare("
+        SELECT s.student_id, p.payment_scheme, p.payment_method, p.total_amount,
+               p.amount_paid, p.balance, p.payment_status
+        FROM students s
+        LEFT JOIN payment_records p ON s.student_id = p.student_id
+        WHERE s.user_id = ?
+    ");
+    $stmt->execute([$_SESSION['user_id']]);
+    $summary = $stmt->fetch();
+
+    if (!$summary) {
+        echo json_encode(['success' => false, 'message' => 'No active student record found.']);
+        exit;
+    }
+
+    $tStmt = $pdo->prepare("
+        SELECT payment_timestamp, receipt_number, payment_method, amount_paid
+        FROM payment_transactions
+        WHERE student_id = ?
+        ORDER BY payment_timestamp DESC, transaction_id DESC
+    ");
+    $tStmt->execute([$summary['student_id']]);
+
+    unset($summary['student_id']);
+
+    echo json_encode([
+        'success' => true,
+        'summary' => $summary,
+        'transactions' => $tStmt->fetchAll()
+    ]);
+    exit;
+}
+
 // Masterlist Filterable by Grade Level
 if ($action === 'get_admin_records') {
+    require_role(['registrar', 'cashier', 'admin']);
     $gradeLevel = $_GET['grade_level'] ?? 'ALL';
 
     $sql = "
@@ -237,6 +290,8 @@ if ($action === 'get_admin_records') {
 
 // Payment Analytics (Totals & Counts for Today, This Week, and This Month)
 if ($action === 'get_payment_analytics') {
+    require_role(['cashier', 'admin']);
+
     // 1. Payments Today
     $tStmt = $pdo->query("SELECT COALESCE(SUM(amount_paid), 0) as rev_today, COUNT(*) as count_today 
                           FROM payment_transactions 
@@ -280,6 +335,7 @@ if ($action === 'get_payment_analytics') {
 
 // Payment Transaction History Log (Today, Week, Month filterable)
 if ($action === 'get_payment_history') {
+    require_role(['cashier', 'admin']);
     $timeframe = $_GET['timeframe'] ?? 'today';
     $sql = "
         SELECT pt.transaction_id, pt.amount_paid, pt.receipt_number, pt.payment_method, pt.payment_timestamp,
@@ -305,11 +361,13 @@ if ($action === 'get_payment_history') {
     exit;
 }
 
-//reciever of that call on the staffdashboard from line 497
-if ($action === 'get_student_transactions'){
+// Staff-only: transaction list for one student (opened from the staff dashboard row modal).
+// Students use get_my_payment_records instead.
+if ($action === 'get_student_transactions') {
+    require_role(['registrar', 'cashier', 'admin']);
     $studentId = (int)($_GET['student_id'] ?? 0);
 
-    if($studentId <=0){
+    if ($studentId <= 0) {
         echo json_encode([
             'success' => false,
             'message' => 'A valid Student ID is required.'
@@ -318,25 +376,24 @@ if ($action === 'get_student_transactions'){
     }
 
     $stmt = $pdo->prepare("
-    SELECT payment_timestamp, receipt_number, payment_method, amount_paid
-    FROM payment_transactions
-    WHERE student_id= ?
-    ORDER BY payment_timestamp DESC
+        SELECT payment_timestamp, receipt_number, payment_method, amount_paid
+        FROM payment_transactions
+        WHERE student_id = ?
+        ORDER BY payment_timestamp DESC
     ");
 
     $stmt->execute([$studentId]);
-    
+
     echo json_encode([
-        'success' => true, 
+        'success' => true,
         'transactions' => $stmt->fetchAll()
     ]);
     exit;
 }
 
-
-
-// Cashier Collect Payment & Record in Transaction History[cite: 3]
+// Cashier Collect Payment & Record in Transaction History
 if ($action === 'cashier_issue_receipt') {
+    require_role(['cashier', 'admin']);
     $d = json_decode(file_get_contents('php://input'), true);
     $payId = $d['payment_id'];
     $amount = (float)$d['amount_paid'];
@@ -358,23 +415,23 @@ if ($action === 'cashier_issue_receipt') {
             throw new Exception("Payment record not found.");
         }
 
-        //added the reserve slot/downpayment of 500 pesos
-        if($amount <=0){
+        if ($amount <= 0) {
             throw new Exception('Payment amount must be greater than Zero');
         }
 
-        if($amount > (float)$rec['balance']){
+        if ($amount > (float)$rec['balance']) {
             throw new Exception("Payment cannot exceed the remaining balance");
         }
 
-        $isFirstPayment = (float)$rec['amount_paid']<= 0;
+        // The first payment must be at least the 500 peso reservation/downpayment
+        $isFirstPayment = (float)$rec['amount_paid'] <= 0;
 
-        if($isFirstPayment){
-            if($amount < 500){
+        if ($isFirstPayment) {
+            if ($amount < 500) {
                 throw new Exception("The first payment must be at least ₱500 to reserve a slot!");
             }
 
-            if(!$rec['section_id']){
+            if (!$rec['section_id']) {
                 throw new Exception("This student does not have a section assigned");
             }
 
@@ -396,14 +453,15 @@ if ($action === 'cashier_issue_receipt') {
         $newStatus = ($newBal <= 0) ? 'Fully Paid' : 'Partially Paid';
 
         $upd = $pdo->prepare("UPDATE payment_records SET amount_paid = ?, balance = ?, payment_status = ?, receipt_number = ?, processed_by = ? WHERE payment_id = ?");
-        $upd->execute([$newPaid, $newBal, $newStatus, $orNumber, $_SESSION['user_id'] ?? 2, $payId]);
+        $upd->execute([$newPaid, $newBal, $newStatus, $orNumber, $_SESSION['user_id'], $payId]);
 
+        // The 500 peso downpayment is enough to mark the student as officially enrolled
         $updStudent = $pdo->prepare("UPDATE students SET enrollment_status = 'Officially Enrolled' WHERE student_id = ?");
         $updStudent->execute([$rec['student_id']]);
 
         // Insert into Payment History Transaction Log
         $logStmt = $pdo->prepare("INSERT INTO payment_transactions (payment_id, student_id, amount_paid, receipt_number, payment_method, collected_by) VALUES (?, ?, ?, ?, ?, ?)");
-        $logStmt->execute([$payId, $rec['student_id'], $amount, $orNumber, $rec['payment_method'], $_SESSION['user_id'] ?? 2]);
+        $logStmt->execute([$payId, $rec['student_id'], $amount, $orNumber, $rec['payment_method'], $_SESSION['user_id']]);
 
         $pdo->commit();
         echo json_encode(['success' => true, 'receipt_number' => $orNumber, 'new_status' => $newStatus]);
@@ -414,8 +472,9 @@ if ($action === 'cashier_issue_receipt') {
     exit;
 }
 
-// Registrar Document Checklist Fetch[cite: 3]
+// Registrar Document Checklist Fetch
 if ($action === 'get_student_documents') {
+    require_role(['registrar', 'admin']);
     $studentId = (int)($_GET['student_id'] ?? 0);
     $stmt = $pdo->prepare("SELECT doc_id, doc_type, status, updated_at FROM submitted_documents WHERE student_id = ?");
     $stmt->execute([$studentId]);
@@ -423,8 +482,9 @@ if ($action === 'get_student_documents') {
     exit;
 }
 
-// Registrar Document Checklist Toggle[cite: 3]
+// Registrar Document Checklist Toggle
 if ($action === 'toggle_document_status') {
+    require_role(['registrar', 'admin']);
     $d = json_decode(file_get_contents('php://input'), true);
     $studentId = (int)($d['student_id'] ?? 0);
     $docType = $d['doc_type'] ?? '';
@@ -433,7 +493,7 @@ if ($action === 'toggle_document_status') {
     $newStatus = $isChecked ? 'Verified' : 'Pending';
 
     $stmt = $pdo->prepare("UPDATE submitted_documents SET status = ?, verified_by = ? WHERE student_id = ? AND doc_type = ?");
-    $stmt->execute([$newStatus, $_SESSION['user_id'] ?? 1, $studentId, $docType]);
+    $stmt->execute([$newStatus, $_SESSION['user_id'], $studentId, $docType]);
 
     echo json_encode(['success' => true, 'status' => $newStatus]);
     exit;

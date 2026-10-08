@@ -21,7 +21,7 @@
             </div>
 
             <!-- CASHIER ANALYTICS & PAYMENT HISTORY -->
-            <div id="analytics-section" class="mb-5">
+            <div id="analytics-section" class="mb-5 d-none">
                 <h5 class="font-weight-bold mb-3 text-navy">📊 Payment Analytics Dashboard</h5>
                 <div class="row mb-4">
                     <div class="col-md-3 col-sm-6 mb-3">
@@ -141,7 +141,7 @@
 
         <!-- Payment Modal that appears when the user clicks on the row
     Also where all the jQuery data like "$('#details-full-name').text($row.children('td').eq(1).text().trim());" goes to and transferred-->
-    
+
     <div class="modal fade" id="studentDetailsModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
@@ -293,7 +293,25 @@
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
     <script>
-        let currentRole = 'admin'; // Hardcoded for frontend demonstration. Usually set via session data endpoint.
+        // Set from the server session in $(document).ready (check_session). Never trust a hardcoded value.
+        let currentRole = null;
+
+        // Escapes text before it is placed inside an HTML string (stops stored XSS and fixes names with ' or ").
+        function esc(value) {
+            return String(value === null || value === undefined ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // If the server says we are not logged in (401), go back to the home page.
+        $(document).ajaxError(function(event, jqXHR) {
+            if (jqXHR.status === 401) {
+                window.location.href = 'index.html';
+            }
+        });
 
         function loadPaymentAnalytics() {
             $.getJSON('api.php?action=get_payment_analytics', function(data) {
@@ -313,26 +331,26 @@
         function loadPaymentHistory(timeframe) {
             $('.btn-hist-filter').removeClass('active');$(`.btn-hist-filter[data-time="${timeframe}"]`).addClass('active');
 
-            $.getJSON(`api.php?action=get_payment_history&timeframe=${timeframe}`, function(data) {
+            $.getJSON(`api.php?action=get_payment_history&timeframe=${encodeURIComponent(timeframe)}`, function(data) {
                 const $tbody =$('#payment-history-body');
                 $tbody.empty();
-                
+
                 if (!data.history || data.history.length === 0) {
-                    $tbody.append(`<tr><td colspan="8" class="text-center text-muted py-3">No payments recorded for this period (${timeframe}).</td></tr>`);
+                    $tbody.append(`<tr><td colspan="8" class="text-center text-muted py-3">No payments recorded for this period (${esc(timeframe)}).</td></tr>`);
                     return;
                 }
-                
+
                 $.each(data.history, function(i, h) {
                     $tbody.append(`
                         <tr>
-                            <td>${h.payment_timestamp}</td>
-                            <td><code>${h.receipt_number}</code></td>
-                            <td>${h.lrn}</td>
-                            <td><b>${h.student_name}</b></td>
-                            <td>${h.level_name}</td>
-                            <td><span class="badge badge-light border">${h.payment_method}</span></td>
+                            <td>${esc(h.payment_timestamp)}</td>
+                            <td><code>${esc(h.receipt_number)}</code></td>
+                            <td>${esc(h.lrn)}</td>
+                            <td><b>${esc(h.student_name)}</b></td>
+                            <td>${esc(h.level_name)}</td>
+                            <td><span class="badge badge-light border">${esc(h.payment_method)}</span></td>
                             <td class="font-weight-bold text-success">₱${parseFloat(h.amount_paid).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td>${h.cashier_name || 'Cashier'}</td>
+                            <td>${esc(h.cashier_name || 'Cashier')}</td>
                         </tr>
                     `);
                 });
@@ -341,44 +359,44 @@
 
         function fetchStaffRecords() {
             const level = $('#filter_grade_level').val();
-            $.getJSON(`api.php?action=get_admin_records&grade_level=${level}`, function(data) {
+            $.getJSON(`api.php?action=get_admin_records&grade_level=${encodeURIComponent(level)}`, function(data) {
                 const $tbody =$('#staff-records-body');
                 $tbody.empty();
-                
+
                 if (!data.records || data.records.length === 0) {
                     $tbody.append(`<tr><td colspan="10" class="text-center text-muted py-4">No enrolled student records found for the selected level.</td></tr>`);
                     return;
                 }
-                
+
                 $.each(data.records, function(i, r) {
                     const bal = parseFloat(r.balance || 0);
                     const tot = parseFloat(r.total_amount || 0);
-                    
+
                     $tbody.append(`
                         <tr class="student-row"
-                            data-student-id="${r.student_id}"
-                            data-payment-method="${r.payment_method || 'Not set'}"
-                            data-payment-scheme="${r.payment_scheme || ''}"
-                            data-amount-paid="${r.amount_paid || 0}">
-                            <td><b>${r.lrn}</b></td>
-                            <td>${r.full_name}</td>
-                            <td class="grade-cell"><span class="badge badge-light border">${r.level_name}</span></td>
+                            data-student-id="${esc(r.student_id)}"
+                            data-payment-method="${esc(r.payment_method || 'Not set')}"
+                            data-payment-scheme="${esc(r.payment_scheme || '')}"
+                            data-amount-paid="${esc(r.amount_paid || 0)}">
+                            <td><b>${esc(r.lrn)}</b></td>
+                            <td>${esc(r.full_name)}</td>
+                            <td class="grade-cell"><span class="badge badge-light border">${esc(r.level_name)}</span></td>
                             <td>
-                                <b>${r.section_name || 'Unassigned'}</b><br>
-                                <small class="text-muted">${r.current_slots}/${r.max_capacity} slots remaining</small>
+                                <b>${esc(r.section_name || 'Unassigned')}</b><br>
+                                <small class="text-muted">${esc(r.current_slots)}/${esc(r.max_capacity)} slots remaining</small>
                             </td>
-                            <td>${r.religion || 'N/A'}</td>
+                            <td>${esc(r.religion || 'N/A')}</td>
                             <td>₱${tot.toLocaleString()}</td>
                             <td class="${bal > 0 ? 'text-danger font-weight-bold' : 'text-success'}">₱${bal.toLocaleString()}</td>
-                            <td><span class="badge ${r.payment_status === 'Fully Paid' ? 'badge-success' : 'badge-info'}">${r.payment_status}</span></td>
-                            <td><code>${r.receipt_number || 'Pending'}</code></td>
+                            <td><span class="badge ${r.payment_status === 'Fully Paid' ? 'badge-success' : 'badge-info'}">${esc(r.payment_status)}</span></td>
+                            <td><code>${esc(r.receipt_number || 'Pending')}</code></td>
                             <td class="action-cell">
                                 <div>
-                                    ${(currentRole === 'registrar' || currentRole === 'admin') ? 
-                                        `<button class="btn btn-sm btn-outline-primary py-0 px-2 mr-1 btn-checklist" data-id="${r.student_id}" data-name="${r.full_name.replace(/'/g, "\\'")}" data-lrn="${r.lrn}">Checklist</button>` : ''
+                                    ${(currentRole === 'registrar' || currentRole === 'admin') ?
+                                        `<button class="btn btn-sm btn-outline-primary py-0 px-2 mr-1 btn-checklist" data-id="${esc(r.student_id)}" data-name="${esc(r.full_name)}" data-lrn="${esc(r.lrn)}">Checklist</button>` : ''
                                     }
-                                    ${(currentRole === 'cashier' || currentRole === 'admin') && r.payment_status !== 'Fully Paid' ? 
-                                        `<button class="btn btn-sm btn-success py-0 px-2 btn-pay" data-payid="${r.payment_id}" data-bal="${bal}">Receive Payment</button>` : ''
+                                    ${(currentRole === 'cashier' || currentRole === 'admin') && r.payment_status !== 'Fully Paid' ?
+                                        `<button class="btn btn-sm btn-success py-0 px-2 btn-pay" data-payid="${esc(r.payment_id)}" data-bal="${bal}">Receive Payment</button>` : ''
                                     }
                                     ${r.payment_status === 'Fully Paid' && currentRole === 'cashier' ? `<span class="text-success small">Paid</span>` : ''}
                                 </div>
@@ -388,7 +406,7 @@
                 });
             });
         }
-        
+
         //next payment template
         function getInstallmentSchedule(scheme) {
             const schedules = {
@@ -458,8 +476,8 @@
             $('#details-installment-status').text('Fully Paid');
 }
 
-        $(document).ready(function() {
-            // Check active session role first. For demo, setting as "admin".
+        // Everything that needs the logged-in role runs from here, after the session is confirmed.
+        function initStaffDashboard() {
             $('#staff-role-indicator').text(`Active Role: ${currentRole.toUpperCase()}`);
             if (currentRole === 'registrar') {
                 $('#analytics-section').addClass('d-none');
@@ -468,8 +486,23 @@
                 loadPaymentAnalytics();
                 loadPaymentHistory('today');
             }
-            
+
             fetchStaffRecords();
+        }
+
+        $(document).ready(function() {
+            // Ask the server who is logged in. Only registrar, cashier and admin may use this page.
+            $.getJSON('api.php?action=check_session', function(session) {
+                const staffRoles = ['registrar', 'cashier', 'admin'];
+                if (!session.logged_in || staffRoles.indexOf(session.role) === -1) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                currentRole = session.role;
+                initStaffDashboard();
+            }).fail(function() {
+                window.location.href = 'index.html';
+            });
 
             // Event Listeners
 
@@ -483,7 +516,7 @@
 
                 $('#details-full-name').text($row.children('td').eq(1).text().trim());
                 $('#details-lrn').text($row.children('td').eq(0).text().trim());
-                $('#details-payment-status').text($row.children('td').eq(7).text().trim()); //gets the details 
+                $('#details-payment-status').text($row.children('td').eq(7).text().trim()); //gets the details
                 $('#details-payment-method').text($row.data('payment-method'));
                 $('#details-balance').text($row.children('td').eq(6).text().trim());
 
@@ -494,7 +527,7 @@
                 $transactions.html(
                     '<tr><td colspan="4" class= "text-center">Loading Transaction</td></tr>'
                 );
-                //this calls the api on line 308 to get the student transactions to display the transaction details
+                //this calls get_student_transactions in api.php (staff only) to display the transaction details
                 $.getJSON('api.php',{
                     action: 'get_student_transactions',
                     student_id: studentId
@@ -509,7 +542,7 @@
                         return
                     }
 
-                    
+
                     $.each(data.transactions, function(i, transaction){
                         const $row = $('<tr>');
 
@@ -517,7 +550,7 @@
                         $row.append($('<td>').text(transaction.receipt_number));
                         $row.append($('<td>').text(transaction.payment_method));
                         $row.append($('<td>').text('₱' + transaction.amount_paid));
-                        
+
                         $transactions.append($row);
                     });
                 }).fail(function(){
@@ -525,11 +558,11 @@
                         '<tr><td colspan="4" class= "text-center text-danger">Could not load transaction data</td></tr>'
                     );
                 });
-                
+
             });
 
             $('#filter_grade_level').on('change', fetchStaffRecords);
-            
+
             $('.btn-hist-filter').on('click', function() {
                 loadPaymentHistory($(this).data('time'));
             });
@@ -539,17 +572,17 @@
                 const studentId = $(this).data('id');$('#docModalStudentName').text($(this).data('name') + ' - Checklist');$('#docModalLRN').text('LRN: ' + $(this).data('lrn'));$.getJSON(`api.php?action=get_student_documents&student_id=${studentId}`, function(data) {
                     const $container =$('#modalDocList');
                     $container.empty();
-                    
+
                     if (data.success && data.documents) {
                         $.each(data.documents, function(i, doc) {
                             const isChecked = doc.status === 'Verified' || doc.status === 'Submitted';
                             $container.append(`
                                 <div class="p-3 bg-light rounded d-flex justify-content-between align-items-center mb-2">
-                                    <span class="font-weight-bold text-dark mb-0">${doc.doc_type}</span>
+                                    <span class="font-weight-bold text-dark mb-0">${esc(doc.doc_type)}</span>
                                     <div class="d-flex align-items-center">
-                                        <span class="badge badge-pill ${isChecked ? 'badge-success' : 'badge-secondary'} mr-3" id="badge_${doc.doc_id}">${doc.status}</span>
-                                        <input type="checkbox" class="doc-toggle" style="width: 18px; height: 18px;" 
-                                            data-sid="${studentId}" data-type="${doc.doc_type}" data-badgeid="badge_${doc.doc_id}" 
+                                        <span class="badge badge-pill ${isChecked ? 'badge-success' : 'badge-secondary'} mr-3" id="badge_${esc(doc.doc_id)}">${esc(doc.status)}</span>
+                                        <input type="checkbox" class="doc-toggle" style="width: 18px; height: 18px;"
+                                            data-sid="${studentId}" data-type="${esc(doc.doc_type)}" data-badgeid="badge_${esc(doc.doc_id)}"
                                             ${isChecked ? 'checked' : ''}>
                                     </div>
                                 </div>
@@ -579,6 +612,11 @@
                         } else {
                             alert('Failed to update requirement checklist.');
                         }
+                    },
+                    error: function(jqXHR) {
+                        if (jqXHR.status === 403) {
+                            alert('You do not have permission to update the requirement checklist.');
+                        }
                     }
                 });
             });
@@ -591,7 +629,7 @@
             $('#paymentForm').on('submit', function(e) {
                 e.preventDefault();
                 const amount = $('#pay_amount').val();
-                
+
                 if (!amount || amount <= 0) {
                     alert("Please enter a valid payment amount.");
                     return;
@@ -601,9 +639,9 @@
                     url: 'api.php?action=cashier_issue_receipt',
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({ 
-                        payment_id: $('#pay_payment_id').val(), 
-                        amount_paid: parseFloat(amount) 
+                    data: JSON.stringify({
+                        payment_id: $('#pay_payment_id').val(),
+                        amount_paid: parseFloat(amount)
                     }),
                     success: function(data) {
                         if (data.success) {
@@ -614,6 +652,11 @@
                             fetchStaffRecords();
                         } else {
                             alert(data.message);
+                        }
+                    },
+                    error: function(jqXHR) {
+                        if (jqXHR.status === 403) {
+                            alert('You do not have permission to collect payments.');
                         }
                     }
                 });
