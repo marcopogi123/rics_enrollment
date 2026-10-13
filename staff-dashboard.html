@@ -124,10 +124,10 @@
                                 <th>Full Name</th>
                                 <th>Grade Level</th>
                                 <th>Section & Slots (30 max)</th>
-                                <th>Religion</th>
                                 <th>Assessed</th>
                                 <th>Balance Remaining</th>
                                 <th>Payment Status</th>
+                                <th>Enrollment Status</th>
                                 <th>Receipt</th>
                                 <th>Role Action</th>
                             </tr>
@@ -234,16 +234,84 @@
                 <div class="modal-body p-4">
                     <form id="paymentForm">
                         <input type="hidden" id="pay_payment_id">
+                        <input type="hidden" id="pay_payment_scheme">
+                        <input type="hidden" id="pay_amount_paid">
+                        <div class="form-group">
+                            <label for="pay_method">Payment Method</label>
+                            <select id="pay_method" class="form-control" required>
+                                <option value="Cash">Cash</option>
+                                <option value="GCash">GCash</option>
+                            </select>
+                        </div>
                         <div class="form-group mb-4">
                             <label class="small font-weight-bold">Amount to Collect (PHP)</label>
                             <input type="number" step="0.01" id="pay_amount" class="form-control" required placeholder="0.00">
-                            <small class="form-text text-muted">
-                            The first payment must be at least ₱500 to reserve the student’s section slot.
-                            </small>
                         </div>
                         <div class="d-flex justify-content-end border-top pt-3">
                             <button type="button" class="btn btn-secondary btn-sm px-4 mr-2" style="border-radius: 50px;" data-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-success btn-sm px-4 font-weight-bold" style="border-radius: 50px;">Issue Receipt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="excessPaymentModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 420px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Payment has excess</h5>
+                </div>
+                <div class="modal-body">
+                    <p id="excess-payment-message" class="mb-0"></p>
+                </div>
+                <div class="modal-footer d-flex flex-wrap justify-content-end">
+                    <button type="button" class="btn btn-secondary" id="cancel-excess-payment">
+                        Cancel / Adjust Amount
+                    </button>
+                    <button type="button" class="btn btn-outline-warning" id="return-excess-as-change">
+                        Return Excess as Change
+                    </button>
+                    <button type="button" class="btn btn-success" id="credit-excess-to-later">
+                        Credit Extra to Later Installments
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- RESERVE SLOT MODAL -->
+    <div class="modal fade" id="reserveSlotModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 400px;">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reserve Student Slot</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="reserveSlotForm">
+                        <input type="hidden" id="reserve_student_id">
+
+                        <p>Record the non-refundable ₱500 reservation payment for
+                            <strong id="reserve_student_name">this student</strong>?
+                        </p>
+
+                        <div class="form-group">
+                            <label for="reserve_payment_method">Payment method</label>
+                            <select id="reserve_payment_method" class="form-control" required>
+                                <option value="">Choose a method</option>
+                                <option value="Cash">Cash</option>
+                                <option value="GCash">GCash</option>
+                            </select>
+                        </div>
+
+                        <div class="d-flex justify-content-end border-top pt-3">
+                            <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning">Record ₱500 and Reserve Slot</button>
                         </div>
                     </form>
                 </div>
@@ -385,10 +453,10 @@
                                 <b>${esc(r.section_name || 'Unassigned')}</b><br>
                                 <small class="text-muted">${esc(r.current_slots)}/${esc(r.max_capacity)} slots remaining</small>
                             </td>
-                            <td>${esc(r.religion || 'N/A')}</td>
                             <td>₱${tot.toLocaleString()}</td>
                             <td class="${bal > 0 ? 'text-danger font-weight-bold' : 'text-success'}">₱${bal.toLocaleString()}</td>
                             <td><span class="badge ${r.payment_status === 'Fully Paid' ? 'badge-success' : 'badge-info'}">${esc(r.payment_status)}</span></td>
+                            <td>${esc(r.enrollment_status || 'N/A')}</td>
                             <td><code>${esc(r.receipt_number || 'Pending')}</code></td>
                             <td class="action-cell">
                                 <div>
@@ -398,6 +466,20 @@
                                     ${(currentRole === 'cashier' || currentRole === 'admin') && r.payment_status !== 'Fully Paid' ?
                                         `<button class="btn btn-sm btn-success py-0 px-2 btn-pay" data-payid="${esc(r.payment_id)}" data-bal="${bal}">Receive Payment</button>` : ''
                                     }
+                                    ${(currentRole === 'cashier' || currentRole === 'admin') &&
+                                        Number(r.slot_reserved) !== 1 &&
+                                        bal >= 500 &&
+                                        Number(r.current_slots) > 0 &&
+                                        r.payment_id ?
+                                        `<button class="btn btn-sm btn-warning py-0 px-2 mr-1 btn-reserve-slot"
+                                            data-student-id="${esc(r.student_id)}"
+                                            data-name="${esc(r.full_name)}">
+                                            Reserve Slot (₱500)
+                                        </button>` : ''
+                                    }
+                                    ${(currentRole === 'cashier' || currentRole === 'admin') && r.enrollment_status !== 'Withdrawn' ?
+                                        `<button class="btn btn-sm btn-outline-danger py-0 px-2 btn-withdraw" data-student-id="${esc(r.student_id)}" data-name="${esc(r.full_name)}">Withdraw</button>` : ''
+                                    }    
                                     ${r.payment_status === 'Fully Paid' && currentRole === 'cashier' ? `<span class="text-success small">Paid</span>` : ''}
                                 </div>
                             </td>
@@ -438,6 +520,25 @@
 
             return schedules[scheme] || [];
 }
+
+
+            function getCurrentInstallmentRemaining(scheme, amountPaid) {
+                const installments = getInstallmentSchedule(scheme);
+                let paidCents = Math.round(amountPaid * 100);
+
+            for (const installment of installments) {
+                const installmentCents = Math.round(installment.amount * 100);
+                const appliedCents = Math.min(paidCents, installmentCents);
+                paidCents -= appliedCents;
+
+                const remainingCents = installmentCents - appliedCents;
+                if (remainingCents > 0) {
+                    return remainingCents / 100;
+                }
+            }
+
+            return 0;
+        }
         //next payment date function --connected tong function na to sa taas
         function showCurrentInstallment(scheme, amountPaid) {
             const installments = getInstallmentSchedule(scheme);
@@ -516,9 +617,9 @@
 
                 $('#details-full-name').text($row.children('td').eq(1).text().trim());
                 $('#details-lrn').text($row.children('td').eq(0).text().trim());
-                $('#details-payment-status').text($row.children('td').eq(7).text().trim()); //gets the details
+                $('#details-payment-status').text($row.children('td').eq(6).text().trim()); //gets the details
                 $('#details-payment-method').text($row.data('payment-method'));
-                $('#details-balance').text($row.children('td').eq(6).text().trim());
+                $('#details-balance').text($row.children('td').eq(5).text().trim());
 
                 showCurrentInstallment(paymentScheme, amountPaid);
 
@@ -622,31 +723,108 @@
             });
 
             // Delegate Cashier Payment Modal functionality
-            $(document).on('click', '.btn-pay', function() {$('#pay_payment_id').val($(this).data('payid'));$('#pay_amount').val($(this).data('bal'));$('#paymentModal').modal('show');
+            $(document).on('click', '.btn-pay', function() {
+                const $row = $(this).closest('.student-row');
+
+                $('#pay_payment_id').val($(this).data('payid'));
+                $('#pay_amount').val($(this).data('bal'));
+                $('#pay_payment_scheme').val($row.data('payment-scheme'));
+                $('#pay_amount_paid').val($row.data('amount-paid'));
+                $('#pay_method').val($row.data('payment-method'));
+                $('#paymentModal').modal('show');
             });
 
-            // Handle Payment Form Submit
-            $('#paymentForm').on('submit', function(e) {
-                e.preventDefault();
-                const amount = $('#pay_amount').val();
 
-                if (!amount || amount <= 0) {
-                    alert("Please enter a valid payment amount.");
+            $(document).on('click', '.btn-reserve-slot', function() {
+                $('#reserve_student_id').val($(this).data('student-id'));
+                $('#reserve_student_name').text($(this).data('name'));
+                $('#reserve_payment_method').val('');
+                $('#reserveSlotModal').modal('show');
+            });
+
+
+            $('#reserveSlotForm').on('submit', function(e) {
+                e.preventDefault();
+
+                const studentId = $('#reserve_student_id').val();
+                const paymentMethod = $('#reserve_payment_method').val();
+
+                if (!paymentMethod) {
+                    alert('Choose Cash or GCash as the payment method.');
                     return;
                 }
 
+                $.ajax({
+                    url: 'api.php?action=reserve_student_slot',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        student_id: studentId,
+                        payment_method: paymentMethod
+                    }),
+                    success: function(result) {
+                        if (result.success) {
+                            alert(`${result.message} Receipt: ${result.receipt_number}`);
+                            $('#reserveSlotModal').modal('hide');
+                            loadPaymentAnalytics();
+                            loadPaymentHistory('today');
+                            fetchStaffRecords();
+                        } else {
+                            alert(result.message || 'Could not reserve this slot.');
+                        }
+                    },
+                    error: function() {
+                        alert('The reservation request failed. Please try again.');
+                    }
+                });
+            });
+
+            $(document).on('click', '.btn-withdraw', function(){
+                const studentId = $(this).data('student-id');
+                const studentName = $(this).data('name');
+
+                if(!confirm(`Withdraw ${studentName}? Their Recorded payments will remain and wont be refunded.`)){
+                    return;
+                }
+
+             $.ajax({
+                url: 'api.php?action=withdraw_student',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ student_id: studentId }),
+                success: function(result) {
+                    if (result.success) {
+                        alert('Student marked as withdrawn; any reserved slot was released.');
+                        fetchStaffRecords();
+                    } else {
+                        alert(result.message || 'Could not withdraw this student.');
+                    }
+                },
+                error: function() {
+                    alert('The withdrawal request failed. Please try again.');
+                }
+            });
+        });
+
+            let pendingPaymentAmount = 0;
+            let pendingInstallmentDue = 0;
+
+
+            function submitCashierPayment(amountToRecord) {
                 $.ajax({
                     url: 'api.php?action=cashier_issue_receipt',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({
                         payment_id: $('#pay_payment_id').val(),
-                        amount_paid: parseFloat(amount)
+                        amount_paid: amountToRecord,
+                        payment_method: $('#pay_method').val()
                     }),
                     success: function(data) {
                         if (data.success) {
                             alert(`Payment credited! Official Receipt Number Generated: ${data.receipt_number}`);
                             $('#paymentModal').modal('hide');
+                            $('#excessPaymentModal').modal('hide');
                             loadPaymentAnalytics();
                             loadPaymentHistory('today');
                             fetchStaffRecords();
@@ -657,9 +835,73 @@
                     error: function(jqXHR) {
                         if (jqXHR.status === 403) {
                             alert('You do not have permission to collect payments.');
+                        } else {
+                            alert('The payment request failed. Please try again.');
                         }
                     }
                 });
+            }
+
+            // Handle Payment Form Submit
+            $('#paymentForm').on('submit', function(e) {
+                e.preventDefault();
+                const amount = parseFloat($('#pay_amount').val());
+
+                if (!amount || amount <= 0) {
+                    alert("Please enter a valid payment amount.");
+                    return;
+                }
+
+                const scheme = $('#pay_payment_scheme').val();
+                const amountPaid = parseFloat($('#pay_amount_paid').val()) || 0;
+                const installmentDue = getCurrentInstallmentRemaining(scheme, amountPaid);
+
+                if (Math.round(amount * 100) > Math.round(installmentDue * 100) && installmentDue > 0) {
+                    pendingPaymentAmount = amount;
+                    pendingInstallmentDue = installmentDue;
+
+                    const excess = amount - installmentDue;
+                    $('#excess-payment-message').text(
+                        `The current installment has ₱${installmentDue.toFixed(2)} remaining, but ₱${amount.toFixed(2)} was entered. The extra amount is ₱${excess.toFixed(2)}. Choose how to handle it.`
+                    );
+                    $('#return-excess-as-change')
+                        .toggle($('#pay_method').val() === 'Cash')
+                        .text(`Return ₱${excess.toFixed(2)} as Change`);
+
+                    $('#paymentModal').one('hidden.bs.modal', function() {
+                        $('#excessPaymentModal').modal('show');
+                    });
+                    $('#paymentModal').modal('hide');
+                    return;
+                }
+
+                submitCashierPayment(amount);
+            });
+
+            //extra credits
+             $('#credit-excess-to-later').on('click', function() {
+                const amountToRecord = pendingPaymentAmount;
+
+                $('#excessPaymentModal').one('hidden.bs.modal', function() {
+                    submitCashierPayment(amountToRecord);
+                });
+                $('#excessPaymentModal').modal('hide');
+            });
+
+            $('#return-excess-as-change').on('click', function() {
+                const amountToRecord = pendingInstallmentDue;
+
+                $('#excessPaymentModal').one('hidden.bs.modal', function() {
+                    submitCashierPayment(amountToRecord);
+                });
+                $('#excessPaymentModal').modal('hide');
+            });
+
+            $('#cancel-excess-payment').on('click', function() {
+                $('#excessPaymentModal').one('hidden.bs.modal', function() {
+                    $('#paymentModal').modal('show');
+                });
+                $('#excessPaymentModal').modal('hide');
             });
 
             // Logout

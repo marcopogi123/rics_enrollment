@@ -315,7 +315,7 @@
                 $('#pay-records-balance').text(money(res.summary.balance));
 
                 if (res.transactions.length === 0) {
-                    $body.append('<tr><td colspan="4" class="text-center text-muted py-3">No payments recorded yet. A first payment of at least ₱500 reserves your slot.</td></tr>');
+                    $body.append('<tr><td colspan="4" class="text-center text-muted py-3">No payments recorded yet.</td></tr>');
                     return;
                 }
 

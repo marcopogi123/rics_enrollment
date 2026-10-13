@@ -265,18 +265,20 @@ if ($action === 'get_admin_records') {
     $gradeLevel = $_GET['grade_level'] ?? 'ALL';
 
     $sql = "
-        SELECT s.student_id, s.lrn, CONCAT(s.last_name, ', ', s.first_name) AS full_name, s.religion, s.enrollment_status,
+        SELECT s.student_id, s.lrn, CONCAT(s.last_name, ', ', s.first_name) AS full_name, s.religion, s.enrollment_status, s.slot_reserved,
                g.level_name, sec.section_name, sec.current_slots, sec.max_capacity, p.payment_id, p.payment_scheme, p.payment_method, 
                p.total_amount, p.balance, p.amount_paid, p.payment_status, p.receipt_number
         FROM students s
         JOIN grade_levels g ON s.grade_level_id = g.grade_level_id
         LEFT JOIN sections sec ON s.section_id = sec.section_id
         LEFT JOIN payment_records p ON s.student_id = p.student_id
+        WHERE s.enrollment_status <> 'Withdrawn'
     ";
 
     $params = [];
     if ($gradeLevel !== 'ALL') {
-        $sql .= " WHERE s.grade_level_id = ? ";
+        $sql .= " AND s.grade_level_id = ? ";  
+
         $params[] = $gradeLevel;
     }
 
@@ -285,6 +287,241 @@ if ($action === 'get_admin_records') {
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     echo json_encode(['success' => true, 'records' => $stmt->fetchAll()]);
+    exit;
+}
+
+
+//Action Roles method like yung withdraw, reserve
+if($action==='withdraw_student'){
+    require_role(['cashier', 'admin']);
+
+    $data = json_decode(file_get_contents('php://input'), true);
+    $studentId = (int)($data['student_id'] ?? 0);
+
+        if ($studentId <= 0) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'A valid student ID is required.'
+        ]);
+        exit;
+    }
+
+    $pdo -> beginTransaction();
+
+    try {
+        $stmt = $pdo->prepare("
+        SELECT section_id, slot_reserved, enrollment_status
+        FROM students
+        WHERE student_id = ?
+        FOR UPDATE
+        ");
+        $stmt -> execute([$studentId]);
+        $student = $stmt ->fetch();
+
+        if (!$student){
+            throw new Exception('Student record not found!');
+        }
+
+        if($student['enrollment_status'] === 'Withdrawn'){
+            throw new Exception('This student have already been Withdrawn.');
+        }
+
+        if ((int)$student['slot_reserved'] === 1) {
+            if (!$student['section_id']) {
+                throw new Exception('Reserved slot has no assigned section.');
+            }
+
+            $releaseSlot = $pdo -> prepare("
+            UPDATE sections 
+            SET current_slots = current_slots + 1
+            WHERE section_id = ? AND current_slots < max_capacity
+            ");
+
+            $releaseSlot -> execute([$student['section_id']]);
+            if ($releaseSlot->rowCount() !== 1) {
+                throw new Exception('Could not release the reserved section slot.');
+            }
+
+    }
+
+    //sets students status as withdrawn
+    $updateStudentStatus = $pdo -> prepare("
+    UPDATE students
+    SET enrollment_status = 'Withdrawn', slot_reserved = 0
+    WHERE student_id = ?
+    ");
+    $updateStudentStatus->execute([$studentId]);
+
+    $pdo->commit();
+    echo json_encode(['success' => true]);
+} catch (Exception $e) {
+    $pdo -> rollback();
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage() 
+    ]);
+    exit;
+}
+exit;
+}
+
+//Reserve feature
+if ($action === 'reserve_student_slot') {
+    require_role(['cashier', 'admin']);
+
+    $data = json_decode(file_get_contents('php://input'), true);
+    $studentId = (int)($data['student_id'] ?? 0);
+    $paymentMethod = $data['payment_method']  ?? '';
+
+    if ($studentId <= 0) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'A valid student ID is required.'
+        ]);
+        exit;
+    }
+
+    if (!in_array($paymentMethod, ['Cash', 'GCash'], true)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Choose Cash or GCash as the payment method.'
+        ]);
+        exit;
+    }
+
+    $pdo->beginTransaction();
+
+
+    //selects the student, their section and payment details
+    try {
+        $stmt = $pdo->prepare("
+            SELECT s.student_id, s.section_id, s.slot_reserved, s.enrollment_status,
+                    sec.current_slots, p.payment_id, p.balance, p.amount_paid
+            FROM students s
+            LEFT JOIN sections sec ON s.section_id = sec.section_id
+            LEFT JOIN payment_records p ON s.student_id = p.student_id
+            WHERE s.student_id = ?
+            FOR UPDATE
+        ");
+        $stmt->execute([$studentId]);
+        $student = $stmt->fetch();
+
+        if (!$student) {
+            throw new Exception('Student record not found.');
+        }
+
+        if ($student['enrollment_status'] === 'Withdrawn') {
+            throw new Exception('A withdrawn student cannot reserve a slot.');
+        }
+
+        if ((int)$student['slot_reserved'] === 1) {
+            throw new Exception('This student already has a reserved slot.');
+        }
+
+        if (!$student['section_id'] || $student['current_slots'] === null) {
+            throw new Exception('This student does not have an available section.');
+        }
+
+        if (!$student['payment_id']) {
+            throw new Exception('This student does not have a payment record.');
+        }
+
+        if ((float)$student['balance'] < 500) {
+            throw new Exception('The remaining balance must be at least ₱500 to reserve a slot.');
+        }
+
+        //updates the sections slot after reserving
+        $reserveSlot = $pdo->prepare("
+            UPDATE sections
+            SET current_slots = current_slots - 1
+            WHERE section_id = ? AND current_slots > 0
+        ");
+        $reserveSlot->execute([$student['section_id']]);
+
+        if ($reserveSlot->rowCount() !== 1) {
+            throw new Exception('No slots are currently available in this section.');
+        }
+
+
+        //updates the new payment left and the status of payment for the student after reserving
+        $newPaid = round((float)$student['amount_paid'] + 500, 2);
+        $newBalance = round((float)$student['balance'] - 500, 2);
+        $newStatus = $newBalance <= 0 ? 'Fully Paid' : 'Partially Paid';
+
+        $updatePayment = $pdo->prepare("
+            UPDATE payment_records
+            SET amount_paid = ?, balance = ?, payment_status = ?,
+                processed_by = ?
+            WHERE payment_id = ?
+        ");
+        $updatePayment->execute([
+            $newPaid,
+            $newBalance,
+            $newStatus,
+            $_SESSION['user_id'],
+            $student['payment_id']
+        ]);
+
+        //sets the slot reserved for the student as 1 meaning they have reserved a slot
+        $updateStudent = $pdo->prepare("
+            UPDATE students
+            SET slot_reserved = 1
+            WHERE student_id = ? AND slot_reserved = 0
+        ");
+        $updateStudent->execute([$studentId]);
+
+        if ($updateStudent->rowCount() !== 1) {
+            throw new Exception('Could not mark this student as having a reserved slot.');
+        }
+
+        $logPayment = $pdo->prepare("
+            INSERT INTO payment_transactions
+                (payment_id, student_id, amount_paid, receipt_number, payment_method, collected_by)
+            VALUES (?, ?, 500, ?, ?, ?)
+        ");
+        $logPayment->execute([
+            $student['payment_id'],
+            $studentId,
+            'PENDING-' . bin2hex(random_bytes(16)),
+            $paymentMethod,
+            $_SESSION['user_id']
+        ]);
+
+        $transactionId = (int)$pdo->lastInsertId();
+        $orNumber = sprintf('OR-%s-%08d', date('Y'), $transactionId);
+        $updateTransactionReceipt = $pdo->prepare("
+            UPDATE payment_transactions
+            SET receipt_number = ?
+            WHERE transaction_id = ?
+        ");
+        $updateTransactionReceipt->execute([$orNumber, $transactionId]);
+
+        $updatePaymentReceipt = $pdo->prepare("
+            UPDATE payment_records
+            SET receipt_number = ?
+            WHERE payment_id = ?
+        ");
+        $updatePaymentReceipt->execute([$orNumber, $student['payment_id']]);
+
+        $pdo->commit();
+
+        echo json_encode([
+            'success' => true,
+            'receipt_number' => $orNumber,
+            'message' => '₱500 reservation payment recorded and slot reserved.'
+        ]);
+
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
     exit;
 }
 
@@ -314,7 +551,7 @@ if ($action === 'get_payment_analytics') {
     $bStmt = $pdo->query("SELECT COALESCE(SUM(balance), 0) as total_balance FROM payment_records");
     $totBal = $bStmt->fetchColumn();
 
-    $eStmt = $pdo->query("SELECT COUNT(*) FROM students");
+    $eStmt = $pdo->query("SELECT COUNT(*) FROM students WHERE enrollment_status <> 'Withdrawn'");
     $totEnrollees = $eStmt->fetchColumn();
 
     echo json_encode([
@@ -397,12 +634,11 @@ if ($action === 'cashier_issue_receipt') {
     $d = json_decode(file_get_contents('php://input'), true);
     $payId = $d['payment_id'];
     $amount = (float)$d['amount_paid'];
-    $orNumber = 'OR-' . date('Y') . '-' . rand(10000, 99999);
-
+    $paymentMethod = $d['payment_method'] ?? '';
     $pdo->beginTransaction();
     try {
         $stmt = $pdo->prepare("
-        SELECT p.balance, p.amount_paid, p.student_id, p.payment_method, s.section_id
+        SELECT p.balance, p.amount_paid, p.student_id, p.payment_method, s.section_id, p.payment_scheme, s.slot_reserved
         FROM payment_records p
         JOIN students s ON p.student_id = s.student_id
         WHERE p.payment_id = ? 
@@ -423,45 +659,94 @@ if ($action === 'cashier_issue_receipt') {
             throw new Exception("Payment cannot exceed the remaining balance");
         }
 
-        // The first payment must be at least the 500 peso reservation/downpayment
-        $isFirstPayment = (float)$rec['amount_paid'] <= 0;
-
-        if ($isFirstPayment) {
-            if ($amount < 500) {
-                throw new Exception("The first payment must be at least ₱500 to reserve a slot!");
-            }
-
-            if (!$rec['section_id']) {
-                throw new Exception("This student does not have a section assigned");
-            }
-
-            $reserveStmt = $pdo->prepare("
-            UPDATE sections
-            SET current_slots = current_slots - 1
-            WHERE section_id = ? AND current_slots > 0
-            ");
-
-            $reserveStmt->execute([$rec['section_id']]);
-
-            if ($reserveStmt->rowCount() !== 1) {
-                throw new Exception("No slots remain in this section.");
-            }
+        if (!in_array($paymentMethod, ['Cash', 'GCash'], true)) {
+            throw new Exception('Choose Cash or GCash as the payment method.');
         }
+
+        $uponEnrollmentAmounts = [
+            'Annually' => 45000.00,
+            'Semi-Annually' => 23017.50,
+            'Quarterly' => 11620.13,
+            'Monthly' => 5263.00
+        ];
+
+        if (!array_key_exists($rec['payment_scheme'], $uponEnrollmentAmounts)) {
+            throw new Exception('Unknown payment scheme.');
+        }
+
+        $enrollmentThreshold = $uponEnrollmentAmounts[$rec['payment_scheme']];
 
         $newPaid = $rec['amount_paid'] + $amount;
         $newBal = max(0, $rec['balance'] - $amount);
         $newStatus = ($newBal <= 0) ? 'Fully Paid' : 'Partially Paid';
 
-        $upd = $pdo->prepare("UPDATE payment_records SET amount_paid = ?, balance = ?, payment_status = ?, receipt_number = ?, processed_by = ? WHERE payment_id = ?");
-        $upd->execute([$newPaid, $newBal, $newStatus, $orNumber, $_SESSION['user_id'], $payId]);
+        $upd = $pdo->prepare("UPDATE payment_records SET amount_paid = ?, balance = ?, payment_status = ?, processed_by = ? WHERE payment_id = ?");
+        $upd->execute([$newPaid, $newBal, $newStatus, $_SESSION['user_id'], $payId]);
 
-        // The 500 peso downpayment is enough to mark the student as officially enrolled
-        $updStudent = $pdo->prepare("UPDATE students SET enrollment_status = 'Officially Enrolled' WHERE student_id = ?");
-        $updStudent->execute([$rec['student_id']]);
+        // Mark the student officially enrolled after the full Upon Enrollment amount is paid.
+        if ($newPaid >= $enrollmentThreshold) {
+            if ((int)$rec['slot_reserved'] !== 1) {
+                if (!$rec['section_id']) {
+                    throw new Exception('This student does not have an assigned section.');
+                }
+
+                $reserveSlot = $pdo->prepare("
+                    UPDATE sections
+                    SET current_slots = current_slots - 1
+                    WHERE section_id = ? AND current_slots > 0
+                ");
+                $reserveSlot->execute([$rec['section_id']]);
+
+                if ($reserveSlot->rowCount() !== 1) {
+                    throw new Exception('No slots are available in this section.');
+                }
+
+                $markSlotReserved = $pdo->prepare("
+                    UPDATE students
+                    SET slot_reserved = 1
+                    WHERE student_id = ? AND slot_reserved = 0
+                ");
+                $markSlotReserved->execute([$rec['student_id']]);
+
+                if ($markSlotReserved->rowCount() !== 1) {
+                    throw new Exception('Could not mark the student slot as reserved.');
+                }
+            }
+
+            $updStudent = $pdo->prepare("
+                UPDATE students
+                SET enrollment_status = 'Officially Enrolled'
+                WHERE student_id = ?
+            ");
+            $updStudent->execute([$rec['student_id']]);
+        }
 
         // Insert into Payment History Transaction Log
         $logStmt = $pdo->prepare("INSERT INTO payment_transactions (payment_id, student_id, amount_paid, receipt_number, payment_method, collected_by) VALUES (?, ?, ?, ?, ?, ?)");
-        $logStmt->execute([$payId, $rec['student_id'], $amount, $orNumber, $rec['payment_method'], $_SESSION['user_id']]);
+        $logStmt->execute([
+            $payId,
+            $rec['student_id'],
+            $amount,
+            'PENDING-' . bin2hex(random_bytes(16)),
+            $paymentMethod,
+            $_SESSION['user_id']
+        ]);
+
+        $transactionId = (int)$pdo->lastInsertId();
+        $orNumber = sprintf('OR-%s-%08d', date('Y'), $transactionId);
+        $updateTransactionReceipt = $pdo->prepare("
+            UPDATE payment_transactions
+            SET receipt_number = ?
+            WHERE transaction_id = ?
+        ");
+        $updateTransactionReceipt->execute([$orNumber, $transactionId]);
+
+        $updatePaymentReceipt = $pdo->prepare("
+            UPDATE payment_records
+            SET receipt_number = ?
+            WHERE payment_id = ?
+        ");
+        $updatePaymentReceipt->execute([$orNumber, $payId]);
 
         $pdo->commit();
         echo json_encode(['success' => true, 'receipt_number' => $orNumber, 'new_status' => $newStatus]);
