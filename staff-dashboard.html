@@ -22,13 +22,13 @@
 
             <!-- CASHIER ANALYTICS & PAYMENT HISTORY -->
             <div id="analytics-section" class="mb-5 d-none">
-                <h5 class="font-weight-bold mb-3 text-navy">📊 Payment Analytics Dashboard</h5>
+                <h5 class="font-weight-bold mb-3 text-navy">📊 Enrollment & Payment Analytics Dashboard</h5>
                 <div class="row mb-4">
                     <div class="col-md-3 col-sm-6 mb-3">
                         <div class="analytics-metric-card border-info">
-                            <small class="text-info font-weight-bold">PAYMENTS TODAY</small>
-                            <h3 class="font-weight-bold text-info mt-2 mb-1" id="stat-rev-today">₱0.00</h3>
-                            <small class="text-muted"><span id="stat-count-today">0</span> Collections</small>
+                            <small class="text-info font-weight-bold">NEW STUDENTS ENROLLED</small>
+                            <h3 class="font-weight-bold text-info mt-2 mb-1" id="stat-new-students">0</h3>
+                            <small class="text-muted">Officially enrolled transferees this school year</small>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6 mb-3">
@@ -96,7 +96,7 @@
                         <h5 class="font-weight-bold mb-1">Student Records & Enrollees per Level</h5>
                         <small class="text-muted">1 section per level (Maximum 30 students each)</small>
                     </div>
-                    <div class="d-flex align-items-center mt-2 mt-md-0">
+                    <div class="d-flex align-items-center mt-2 mt-md-0 flex-wrap">
                         <label class="small font-weight-bold mr-2 mb-0">Level Filter:</label>
                         <select id="filter_grade_level" class="form-control form-control-sm" style="width: 220px;">
                             <option value="ALL">All Grade Levels</option>
@@ -113,6 +113,16 @@
                             <option value="11">Grade 9 (Junior High)</option>
                             <option value="12">Grade 10 (Junior High)</option>
                         </select>
+                        <label class="small font-weight-bold ml-3 mr-2 mb-0">School Year:</label>
+                        <select id="filter_school_year" class="form-control form-control-sm" style="width: 170px;">
+                            <option value="CURRENT">Current school year</option>
+                        </select>
+                        <label class="small font-weight-bold ml-3 mr-2 mb-0">Enrollment:</label>
+                        <select id="filter_enrollment_status" class="form-control form-control-sm" style="width: 190px;">
+                            <option value="ALL">All statuses</option>
+                            <option value="ENROLLED">Officially enrolled</option>
+                            <option value="NOT_ENROLLED">Not officially enrolled</option>
+                        </select>
                     </div>
                 </div>
 
@@ -123,6 +133,7 @@
                                 <th>LRN</th>
                                 <th>Full Name</th>
                                 <th>Grade Level</th>
+                                <th>School Year</th>
                                 <th>Section & Slots (30 max)</th>
                                 <th>Assessed</th>
                                 <th>Balance Remaining</th>
@@ -155,11 +166,12 @@
                 <div class="modal-body">
                     <p><strong>Full Name:</strong> <span id="details-full-name">Select a student</span></p>
                     <p><strong>LRN:</strong> <span id="details-lrn">---</span></p>
+                    <p><strong>School Year:</strong> <span id="details-school-year">---</span></p>
                     <p><strong>Payment Status:</strong> <span id="details-payment-status">---</span></p>
                     <p><strong>Mode of Payment:</strong> <span id="details-payment-method">---</span></p>
                     <p><strong>Balance Remaining:</strong> <span id="details-balance">---</span></p>
 
-                    <div class="alert alert-info small">
+                    <div id="details-installment-panel" class="alert alert-info small">
                         <strong>Current installment:</strong>
                         <span id="details-installment">Loading...</span><br>
                         <strong>Installment status:</strong>
@@ -385,8 +397,7 @@
             $.getJSON('api.php?action=get_payment_analytics', function(data) {
                 if (data.success && data.analytics) {
                     const a = data.analytics;
-                    $('#stat-rev-today').text('₱' + parseFloat(a.revenue_today).toLocaleString(undefined, {minimumFractionDigits: 2}));
-                    $('#stat-count-today').text(a.count_today);
+                    $('#stat-new-students').text(a.new_students_enrolled);
                     $('#stat-rev-week').text('₱' + parseFloat(a.revenue_week).toLocaleString(undefined, {minimumFractionDigits: 2}));
                     $('#stat-count-week').text(a.count_week);
                     $('#stat-rev-month').text('₱' + parseFloat(a.revenue_month).toLocaleString(undefined, {minimumFractionDigits: 2}));
@@ -427,46 +438,69 @@
 
         function fetchStaffRecords() {
             const level = $('#filter_grade_level').val();
-            $.getJSON(`api.php?action=get_admin_records&grade_level=${encodeURIComponent(level)}`, function(data) {
+            const schoolYear = $('#filter_school_year').val() || 'CURRENT';
+            const enrollmentStatus = $('#filter_enrollment_status').val() || 'ALL';
+            $.getJSON(`api.php?action=get_admin_records&grade_level=${encodeURIComponent(level)}&school_year=${encodeURIComponent(schoolYear)}&enrollment_status=${encodeURIComponent(enrollmentStatus)}`, function(data) {
+                const $yearFilter = $('#filter_school_year');
+                const selectedYear = $yearFilter.val() || 'CURRENT';
+                $yearFilter.empty().append(
+                    $('<option>', { value: 'CURRENT', text: `Current school year (${data.current_school_year})` })
+                );
+                (data.school_years || []).forEach(function(year) {
+                    if (year !== data.current_school_year) {
+                        $yearFilter.append($('<option>', { value: year, text: year }));
+                    }
+                });
+                $yearFilter.append($('<option>', { value: 'ALL', text: 'All school years' }));
+                $yearFilter.val(
+                    selectedYear === 'CURRENT' || selectedYear === 'ALL' ||
+                    (data.school_years || []).indexOf(selectedYear) !== -1
+                        ? selectedYear
+                        : 'CURRENT'
+                );
+
                 const $tbody =$('#staff-records-body');
                 $tbody.empty();
 
                 if (!data.records || data.records.length === 0) {
-                    $tbody.append(`<tr><td colspan="10" class="text-center text-muted py-4">No enrolled student records found for the selected level.</td></tr>`);
+                    $tbody.append(`<tr><td colspan="11" class="text-center text-muted py-4">No enrolled student records found for the selected filters.</td></tr>`);
                     return;
                 }
 
                 $.each(data.records, function(i, r) {
                     const bal = parseFloat(r.balance || 0);
                     const tot = parseFloat(r.total_amount || 0);
+                    const isCurrentSchoolYear = r.school_year === data.current_school_year;
 
                     $tbody.append(`
                         <tr class="student-row"
                             data-student-id="${esc(r.student_id)}"
                             data-payment-method="${esc(r.payment_method || 'Not set')}"
                             data-payment-scheme="${esc(r.payment_scheme || '')}"
-                            data-amount-paid="${esc(r.amount_paid || 0)}">
+                            data-amount-paid="${esc(r.amount_paid || 0)}"
+                            data-current-year="${isCurrentSchoolYear ? '1' : '0'}">
                             <td><b>${esc(r.lrn)}</b></td>
                             <td>${esc(r.full_name)}</td>
                             <td class="grade-cell"><span class="badge badge-light border">${esc(r.level_name)}</span></td>
+                            <td class="school-year-cell">${esc(r.school_year)}</td>
                             <td>
                                 <b>${esc(r.section_name || 'Unassigned')}</b><br>
-                                <small class="text-muted">${esc(r.current_slots)}/${esc(r.max_capacity)} slots remaining</small>
+                                <small class="text-muted">${isCurrentSchoolYear ? `${esc(r.current_slots)}/${esc(r.max_capacity)} slots remaining` : 'Historical record'}</small>
                             </td>
                             <td>₱${tot.toLocaleString()}</td>
-                            <td class="${bal > 0 ? 'text-danger font-weight-bold' : 'text-success'}">₱${bal.toLocaleString()}</td>
-                            <td><span class="badge ${r.payment_status === 'Fully Paid' ? 'badge-success' : 'badge-info'}">${esc(r.payment_status)}</span></td>
+                            <td class="payment-balance-cell ${bal > 0 ? 'text-danger font-weight-bold' : 'text-success'}">₱${bal.toLocaleString()}</td>
+                            <td class="payment-status-cell"><span class="badge ${r.payment_status === 'Fully Paid' ? 'badge-success' : 'badge-info'}">${esc(r.payment_status)}</span></td>
                             <td>${esc(r.enrollment_status || 'N/A')}</td>
                             <td><code>${esc(r.receipt_number || 'Pending')}</code></td>
                             <td class="action-cell">
                                 <div>
-                                    ${(currentRole === 'registrar' || currentRole === 'admin') ?
+                                    ${isCurrentSchoolYear && (currentRole === 'registrar' || currentRole === 'admin') ?
                                         `<button class="btn btn-sm btn-outline-primary py-0 px-2 mr-1 btn-checklist" data-id="${esc(r.student_id)}" data-name="${esc(r.full_name)}" data-lrn="${esc(r.lrn)}">Checklist</button>` : ''
                                     }
-                                    ${(currentRole === 'cashier' || currentRole === 'admin') && r.payment_status !== 'Fully Paid' ?
+                                    ${isCurrentSchoolYear && (currentRole === 'cashier' || currentRole === 'admin') && r.payment_status !== 'Fully Paid' ?
                                         `<button class="btn btn-sm btn-success py-0 px-2 btn-pay" data-payid="${esc(r.payment_id)}" data-bal="${bal}">Receive Payment</button>` : ''
                                     }
-                                    ${(currentRole === 'cashier' || currentRole === 'admin') &&
+                                    ${isCurrentSchoolYear && (currentRole === 'cashier' || currentRole === 'admin') &&
                                         Number(r.slot_reserved) !== 1 &&
                                         bal >= 500 &&
                                         Number(r.current_slots) > 0 &&
@@ -477,10 +511,10 @@
                                             Reserve Slot (₱500)
                                         </button>` : ''
                                     }
-                                    ${(currentRole === 'cashier' || currentRole === 'admin') && r.enrollment_status !== 'Withdrawn' ?
+                                    ${isCurrentSchoolYear && (currentRole === 'cashier' || currentRole === 'admin') && r.enrollment_status !== 'Withdrawn' ?
                                         `<button class="btn btn-sm btn-outline-danger py-0 px-2 btn-withdraw" data-student-id="${esc(r.student_id)}" data-name="${esc(r.full_name)}">Withdraw</button>` : ''
                                     }    
-                                    ${r.payment_status === 'Fully Paid' && currentRole === 'cashier' ? `<span class="text-success small">Paid</span>` : ''}
+                                    ${isCurrentSchoolYear && r.payment_status === 'Fully Paid' && currentRole === 'cashier' ? `<span class="text-success small">Paid</span>` : ''}
                                 </div>
                             </td>
                         </tr>
@@ -613,15 +647,21 @@
                 const studentId = $row.data('student-id');
                 const paymentScheme = $row.data('payment-scheme');
                 const amountPaid = parseFloat($row.data('amount-paid')) || 0;
-
+                const isCurrentSchoolYear = $row.data('current-year') === 1;
 
                 $('#details-full-name').text($row.children('td').eq(1).text().trim());
                 $('#details-lrn').text($row.children('td').eq(0).text().trim());
-                $('#details-payment-status').text($row.children('td').eq(6).text().trim()); //gets the details
+                $('#details-school-year').text($row.find('.school-year-cell').text().trim());
+                $('#details-payment-status').text($row.find('.payment-status-cell').text().trim()); //gets the details
                 $('#details-payment-method').text($row.data('payment-method'));
-                $('#details-balance').text($row.children('td').eq(5).text().trim());
+                $('#details-balance').text($row.find('.payment-balance-cell').text().trim());
 
-                showCurrentInstallment(paymentScheme, amountPaid);
+                if (isCurrentSchoolYear) {
+                    $('#details-installment-panel').removeClass('d-none');
+                    showCurrentInstallment(paymentScheme, amountPaid);
+                } else {
+                    $('#details-installment-panel').addClass('d-none');
+                }
 
                 $('#studentDetailsModal').modal('show');
                 const $transactions = $('#student-transaction-body');
@@ -663,6 +703,8 @@
             });
 
             $('#filter_grade_level').on('change', fetchStaffRecords);
+            $('#filter_school_year').on('change', fetchStaffRecords);
+            $('#filter_enrollment_status').on('change', fetchStaffRecords);
 
             $('.btn-hist-filter').on('click', function() {
                 loadPaymentHistory($(this).data('time'));

@@ -17,6 +17,8 @@ try {
     exit;
 }
 
+const CURRENT_SCHOOL_YEAR = '2026-2027';
+
 // Auto-provision default staff accounts
 function verifyAndProvisionStaff($pdo) {
     $staff = [
@@ -137,10 +139,10 @@ if ($action === 'submit_enrollment') {
 
         // Create Student Profile with Religion
         $sStmt = $pdo->prepare("INSERT INTO students 
-            (user_id, lrn, date_of_registration, grade_level_id, section_id, last_name, first_name, middle_name, nickname, date_of_birth, place_of_birth, gender, religion, contact_no, present_address, is_transferee, former_elementary_school, general_average, enrollment_status)
-            VALUES (?, ?, CURDATE(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Payment Verification')");
+            (user_id, lrn, school_year, date_of_registration, grade_level_id, section_id, last_name, first_name, middle_name, nickname, date_of_birth, place_of_birth, gender, religion, contact_no, present_address, is_transferee, former_elementary_school, general_average, enrollment_status)
+            VALUES (?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Payment Verification')");
         $sStmt->execute([
-            $newUserId, $d['lrn'], $d['grade_level_id'], $sectionId, $d['last_name'], $d['first_name'],
+            $newUserId, $d['lrn'], CURRENT_SCHOOL_YEAR, $d['grade_level_id'], $sectionId, $d['last_name'], $d['first_name'],
             $d['middle_name'], $d['nickname'], $d['date_of_birth'], $d['place_of_birth'],
             $d['gender'], $d['religion'], $d['contact_no'], $d['present_address'],
             $d['is_transferee'], $d['former_school'], $d['average']
@@ -263,9 +265,22 @@ if ($action === 'get_my_payment_records') {
 if ($action === 'get_admin_records') {
     require_role(['registrar', 'cashier', 'admin']);
     $gradeLevel = $_GET['grade_level'] ?? 'ALL';
+    $schoolYear = $_GET['school_year'] ?? 'CURRENT';
+    $enrollmentStatus = $_GET['enrollment_status'] ?? 'ALL';
+    if ($schoolYear !== 'CURRENT' && $schoolYear !== 'ALL' &&
+        !preg_match('/^\d{4}-\d{4}$/', $schoolYear)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid school year filter.']);
+        exit;
+    }
+    if (!in_array($enrollmentStatus, ['ALL', 'ENROLLED', 'NOT_ENROLLED'], true)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid enrollment status filter.']);
+        exit;
+    }
 
     $sql = "
-        SELECT s.student_id, s.lrn, CONCAT(s.last_name, ', ', s.first_name) AS full_name, s.religion, s.enrollment_status, s.slot_reserved,
+        SELECT s.student_id, s.lrn, s.school_year, CONCAT(s.last_name, ', ', s.first_name) AS full_name, s.religion, s.enrollment_status, s.slot_reserved,
                g.level_name, sec.section_name, sec.current_slots, sec.max_capacity, p.payment_id, p.payment_scheme, p.payment_method, 
                p.total_amount, p.balance, p.amount_paid, p.payment_status, p.receipt_number
         FROM students s
@@ -276,6 +291,22 @@ if ($action === 'get_admin_records') {
     ";
 
     $params = [];
+    if ($schoolYear === 'CURRENT') {
+        $sql .= " AND s.school_year = ? ";
+        $params[] = CURRENT_SCHOOL_YEAR;
+    } elseif ($schoolYear !== 'ALL') {
+        $sql .= " AND s.school_year = ? ";
+        $params[] = $schoolYear;
+    }
+
+    if ($enrollmentStatus === 'ENROLLED') {
+        $sql .= " AND s.enrollment_status = ? ";
+        $params[] = 'Officially Enrolled';
+    } elseif ($enrollmentStatus === 'NOT_ENROLLED') {
+        $sql .= " AND s.enrollment_status <> ? ";
+        $params[] = 'Officially Enrolled';
+    }
+
     if ($gradeLevel !== 'ALL') {
         $sql .= " AND s.grade_level_id = ? ";  
 
@@ -286,7 +317,19 @@ if ($action === 'get_admin_records') {
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
-    echo json_encode(['success' => true, 'records' => $stmt->fetchAll()]);
+
+    //year filter
+    $yearStmt = $pdo->query("SELECT DISTINCT school_year FROM students ORDER BY school_year DESC");
+    $schoolYears = array_column($yearStmt->fetchAll(), 'school_year');
+    if (!in_array(CURRENT_SCHOOL_YEAR, $schoolYears, true)) {
+        array_unshift($schoolYears, CURRENT_SCHOOL_YEAR);
+    }
+    echo json_encode([
+        'success' => true,
+        'records' => $stmt->fetchAll(),
+        'school_years' => $schoolYears,
+        'current_school_year' => CURRENT_SCHOOL_YEAR
+    ]);
     exit;
 }
 
@@ -310,7 +353,7 @@ if($action==='withdraw_student'){
 
     try {
         $stmt = $pdo->prepare("
-        SELECT section_id, slot_reserved, enrollment_status
+        SELECT section_id, slot_reserved, enrollment_status, school_year
         FROM students
         WHERE student_id = ?
         FOR UPDATE
@@ -320,6 +363,10 @@ if($action==='withdraw_student'){
 
         if (!$student){
             throw new Exception('Student record not found!');
+        }
+
+        if ($student['school_year'] !== CURRENT_SCHOOL_YEAR) {
+            throw new Exception('Only current school-year records can be withdrawn.');
         }
 
         if($student['enrollment_status'] === 'Withdrawn'){
@@ -395,7 +442,7 @@ if ($action === 'reserve_student_slot') {
     //selects the student, their section and payment details
     try {
         $stmt = $pdo->prepare("
-            SELECT s.student_id, s.section_id, s.slot_reserved, s.enrollment_status,
+            SELECT s.student_id, s.section_id, s.slot_reserved, s.enrollment_status, s.school_year,
                     sec.current_slots, p.payment_id, p.balance, p.amount_paid
             FROM students s
             LEFT JOIN sections sec ON s.section_id = sec.section_id
@@ -408,6 +455,10 @@ if ($action === 'reserve_student_slot') {
 
         if (!$student) {
             throw new Exception('Student record not found.');
+        }
+
+        if ($student['school_year'] !== CURRENT_SCHOOL_YEAR) {
+            throw new Exception('Only current school-year records can reserve a slot.');
         }
 
         if ($student['enrollment_status'] === 'Withdrawn') {
@@ -525,40 +576,43 @@ if ($action === 'reserve_student_slot') {
     exit;
 }
 
-// Payment Analytics (Totals & Counts for Today, This Week, and This Month)
+// Payment and new-student analytics for the staff dashboard.
 if ($action === 'get_payment_analytics') {
     require_role(['cashier', 'admin']);
 
-    // 1. Payments Today
-    $tStmt = $pdo->query("SELECT COALESCE(SUM(amount_paid), 0) as rev_today, COUNT(*) as count_today 
-                          FROM payment_transactions 
-                          WHERE DATE(payment_timestamp) = CURDATE()");
-    $todayData = $tStmt->fetch();
-
-    // 2. Payments This Week
+    // 1. Payments This Week
     $wStmt = $pdo->query("SELECT COALESCE(SUM(amount_paid), 0) as rev_week, COUNT(*) as count_week 
                           FROM payment_transactions 
                           WHERE YEARWEEK(payment_timestamp, 1) = YEARWEEK(CURDATE(), 1)");
     $weekData = $wStmt->fetch();
 
-    // 3. Payments This Month
+    // 2. Payments This Month
     $mStmt = $pdo->query("SELECT COALESCE(SUM(amount_paid), 0) as rev_month, COUNT(*) as count_month 
                           FROM payment_transactions 
                           WHERE MONTH(payment_timestamp) = MONTH(CURDATE()) AND YEAR(payment_timestamp) = YEAR(CURDATE())");
     $monthData = $mStmt->fetch();
 
-    // 4. Receivables & Enrollee counts
+    // 3. Receivables & enrollee counts
     $bStmt = $pdo->query("SELECT COALESCE(SUM(balance), 0) as total_balance FROM payment_records");
     $totBal = $bStmt->fetchColumn();
 
     $eStmt = $pdo->query("SELECT COUNT(*) FROM students WHERE enrollment_status <> 'Withdrawn'");
     $totEnrollees = $eStmt->fetchColumn();
 
+    $newStudentsStmt = $pdo->prepare("
+        SELECT COUNT(*)
+        FROM students
+        WHERE is_transferee = 'Yes'
+          AND school_year = ?
+          AND enrollment_status = 'Officially Enrolled'
+    ");
+    $newStudentsStmt->execute([CURRENT_SCHOOL_YEAR]);
+    $newStudentsEnrolled = $newStudentsStmt->fetchColumn();
+
     echo json_encode([
         'success' => true,
         'analytics' => [
-            'revenue_today' => (float)$todayData['rev_today'],
-            'count_today' => (int)$todayData['count_today'],
+            'new_students_enrolled' => (int)$newStudentsEnrolled,
             'revenue_week' => (float)$weekData['rev_week'],
             'count_week' => (int)$weekData['count_week'],
             'revenue_month' => (float)$monthData['rev_month'],
@@ -638,7 +692,7 @@ if ($action === 'cashier_issue_receipt') {
     $pdo->beginTransaction();
     try {
         $stmt = $pdo->prepare("
-        SELECT p.balance, p.amount_paid, p.student_id, p.payment_method, s.section_id, p.payment_scheme, s.slot_reserved
+        SELECT p.balance, p.amount_paid, p.student_id, p.payment_method, s.section_id, p.payment_scheme, s.slot_reserved, s.school_year
         FROM payment_records p
         JOIN students s ON p.student_id = s.student_id
         WHERE p.payment_id = ? 
@@ -649,6 +703,10 @@ if ($action === 'cashier_issue_receipt') {
 
         if (!$rec) {
             throw new Exception("Payment record not found.");
+        }
+
+        if ($rec['school_year'] !== CURRENT_SCHOOL_YEAR) {
+            throw new Exception('Only current school-year records can receive payments.');
         }
 
         if ($amount <= 0) {
@@ -774,6 +832,14 @@ if ($action === 'toggle_document_status') {
     $studentId = (int)($d['student_id'] ?? 0);
     $docType = $d['doc_type'] ?? '';
     $isChecked = (bool)($d['is_checked'] ?? false);
+
+    $yearStmt = $pdo->prepare("SELECT school_year FROM students WHERE student_id = ?");
+    $yearStmt->execute([$studentId]);
+    if ($yearStmt->fetchColumn() !== CURRENT_SCHOOL_YEAR) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Only current school-year records can be updated.']);
+        exit;
+    }
     
     $newStatus = $isChecked ? 'Verified' : 'Pending';
 
