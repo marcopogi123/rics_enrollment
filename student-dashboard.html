@@ -348,7 +348,10 @@
                     const s = resData.data;
                     $('#portal-student-name').text(`${s.first_name} ${s.last_name}`);
                     $('#portal-school-year').text(s.school_year);
-                    $('#portal-section').text(`Section: ${s.section_name || 'Unassigned'} (${s.current_slots}/${s.max_capacity} slots left)`);
+                    const sectionLabel = resData.has_current_enrollment
+                        ? `Section: ${s.section_name || 'Unassigned'} (${s.current_slots}/${s.max_capacity} slots left)`
+                        : `Section: ${s.section_name || 'Unassigned'} (Historical record)`;
+                    $('#portal-section').text(sectionLabel);
                     $('#portal-grade-level').text(`Level: ${s.level_name}`);
                     $('#portal-scheme').text(s.payment_scheme);
                     $('#portal-method').text(s.payment_method);
