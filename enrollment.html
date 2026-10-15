@@ -43,8 +43,8 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <span class="text-primary font-weight-bold small text-uppercase">Academic Year 2026-2027</span>
-                    <h2 class="font-weight-bold mb-0">Enrollment Application</h2>
-                    <small class="text-muted">Sections are automatically assigned (1 Section per level, max 30 slots)</small>
+                    <h2 class="font-weight-bold mb-0" id="enrollment-title">Enrollment Application</h2>
+                    <small class="text-muted" id="enrollment-subtitle">Sections are automatically assigned (1 Section per level, max 30 slots)</small>
                 </div>
                 <div>
                     <span class="step-pill active mr-1" id="step-ind-1">1</span>
@@ -52,6 +52,17 @@
                     <span class="step-pill mr-1" id="step-ind-3">3</span>
                     <span class="step-pill" id="step-ind-4">4</span>
                 </div>
+            </div>
+
+            <div class="card card-custom p-4 shadow-sm mb-4 bg-light">
+                <h5 class="font-weight-bold mb-3">Choose Enrollment Type</h5>
+                <div class="d-flex flex-wrap">
+                    <button type="button" class="btn btn-rics-primary mr-2 mb-2" id="btn-new-enrollment">New Student</button>
+                    <button type="button" class="btn btn-outline-primary mb-2" id="btn-returning-enrollment">Returning Student Re-enrollment</button>
+                </div>
+                <p class="small text-muted mb-0" id="enrollment-type-help">New students create a portal account. Returning students sign in to reuse their existing account and LRN.</p>
+                <div class="alert alert-info mt-3 mb-0 d-none" id="returning-student-summary"></div>
+                <div class="alert alert-warning mt-3 mb-0 d-none" id="enrollment-message"></div>
             </div>
 
             <form id="enrollmentForm">
@@ -130,10 +141,10 @@
                 <div class="card card-custom p-4 shadow-sm mb-4 bg-light d-none" id="wizard-step-2">
                     <h5 class="font-weight-bold mb-3">Emergency & Medical Information</h5>
                     <div class="form-row">
-                        <div class="form-group col-md-6"><label class="small font-weight-bold">Emergency Contact Person *</label><input type="text" id="reg_emer_name" class="form-control" placeholder="Parent or guardian full name"></div>
-                        <div class="form-group col-md-3"><label class="small font-weight-bold">Relationship *</label><input type="text" id="reg_emer_rel" class="form-control" placeholder="e.g. Mother / Father"></div>
-                        <div class="form-group col-md-3"><label class="small font-weight-bold">Contact No. *</label><input type="text" id="reg_emer_contact" class="form-control" placeholder="09xxxxxxxxx"></div>
-                        <div class="form-group col-12"><label class="small font-weight-bold">Emergency Address *</label><input type="text" id="reg_emer_address" class="form-control" placeholder="Complete address"></div>
+                        <div class="form-group col-md-6"><label class="small font-weight-bold">Emergency Contact Person *</label><input type="text" id="reg_emer_name" class="form-control" required placeholder="Parent or guardian full name"></div>
+                        <div class="form-group col-md-3"><label class="small font-weight-bold">Relationship *</label><input type="text" id="reg_emer_rel" class="form-control" required placeholder="e.g. Mother / Father"></div>
+                        <div class="form-group col-md-3"><label class="small font-weight-bold">Contact No. *</label><input type="text" id="reg_emer_contact" class="form-control" required placeholder="09xxxxxxxxx"></div>
+                        <div class="form-group col-12"><label class="small font-weight-bold">Emergency Address *</label><input type="text" id="reg_emer_address" class="form-control" required placeholder="Complete address"></div>
                         <div class="form-group col-md-6"><label class="small font-weight-bold">Known Illnesses / Surgical History</label><input type="text" id="reg_illnesses" class="form-control" placeholder="None or list conditions"></div>
                         <div class="form-group col-md-6"><label class="small font-weight-bold">Known Allergies</label><input type="text" id="reg_allergies" class="form-control" placeholder="None or list allergies"></div>
                         <div class="form-group col-12">
@@ -157,32 +168,37 @@
                     <h5 class="font-weight-bold mb-1">Payment Plan & Terms</h5>
                     <p class="text-muted small mb-4">Select preferred installment terms and payment channel.</p>
 
+                    <div class="form-group d-none" id="returning-grade-group" style="max-width: 460px;">
+                        <label class="small font-weight-bold" for="returning_grade_level">Grade Level for This School Year *</label>
+                        <div id="returning-grade-select"></div>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3 mb-md-0">
                             <label class="font-weight-bold small">Step 1: Choose a Payment Scheme</label>
                             <div class="list-group mb-3">
                                 <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
-                                    <span><input type="radio" name="payment_scheme" value="Annually" checked class="scheme-radio"> Annually (No Surcharge)</span>
+                                    <span><input type="radio" name="payment_scheme" value="Annually" checked required class="scheme-radio"> Annually (No Surcharge)</span>
                                     <b>₱45,000.00</b>
                                 </label>
                                 <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
-                                    <span><input type="radio" name="payment_scheme" value="Semi-Annually" class="scheme-radio"> Semi-Annually</span>
+                                    <span><input type="radio" name="payment_scheme" value="Semi-Annually" required class="scheme-radio"> Semi-Annually</span>
                                     <b>₱46,035.00</b>
                                 </label>
                                 <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
-                                    <span><input type="radio" name="payment_scheme" value="Quarterly" class="scheme-radio"> Quarterly</span>
+                                    <span><input type="radio" name="payment_scheme" value="Quarterly" required class="scheme-radio"> Quarterly</span>
                                     <b>₱46,480.50</b>
                                 </label>
                                 <label class="list-group-item d-flex justify-content-between align-items-center mb-0">
-                                    <span><input type="radio" name="payment_scheme" value="Monthly" class="scheme-radio"> Monthly</span>
+                                    <span><input type="radio" name="payment_scheme" value="Monthly" required class="scheme-radio"> Monthly</span>
                                     <b>₱47,367.00</b>
                                 </label>
                             </div>
 
                             <label class="font-weight-bold small">Step 2: Payment Method</label>
                             <div>
-                                <label class="mr-3"><input type="radio" name="pay_method" value="Cash" checked> Cash Payment at Cashier</label>
-                                <label><input type="radio" name="pay_method" value="GCash"> GCash Transfer</label>
+                                <label class="mr-3"><input type="radio" name="pay_method" value="Cash" checked required> Cash Payment at Cashier</label>
+                                <label><input type="radio" name="pay_method" value="GCash" required> GCash Transfer</label>
                             </div>
                         </div>
 
@@ -199,8 +215,8 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-between mt-4">
-                        <button type="button" class="btn btn-outline-secondary px-4 btn-back" data-step="2" style="border-radius: 50px;">&larr; Back</button>
-                        <button type="button" class="btn btn-rics-primary px-4 btn-next" data-step="4">Next &rarr;</button>
+                        <button type="button" class="btn btn-outline-secondary px-4 btn-back" data-step="2" id="payment-back-button" style="border-radius: 50px;">&larr; Back</button>
+                        <button type="button" class="btn btn-rics-primary px-4 btn-next" data-step="4" id="payment-next-button">Next &rarr;</button>
                     </div>
                 </div>
 
@@ -288,33 +304,145 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
     <script>
         $(document).ready(function() {
+            let enrollmentType = 'new';
+            const $returningGradeSelect = $('#reg_grade_level').clone()
+                .attr('id', 'returning_grade_level')
+                .prop('disabled', false)
+                .prop('required', true)
+                .val('');
+            $('#returning-grade-select').append($returningGradeSelect);
+
             // Wizard Navigation Function
             function goToStep(step) {
                 $('[id^="wizard-step-"]').addClass('d-none');
+                $('[id^="wizard-step-"] :input').prop('disabled', true);
                 $('.step-pill').removeClass('active');
                 $('#wizard-step-' + step).removeClass('d-none');
+                $('#wizard-step-' + step + ' :input').prop('disabled', false);
                 for (let j = 1; j <= step; j++) {
                     $('#step-ind-' + j).addClass('active');
                 }
             }
 
-            // Step 1 Validation
-            $('#btn-next-2').on('click', function() {
-                const reqIds = ['#reg_first_name', '#reg_last_name', '#reg_lrn', '#reg_grade_level', '#reg_dob', '#reg_pob', '#reg_gender', '#reg_religion', '#reg_contact', '#reg_address'];
-                let valid = true;
-                $.each(reqIds, function(i, sel) {
-                    if (!$(sel).val().trim()) {
-                        alert('Please complete all required fields (including Religion) before proceeding.');
-                        $(sel).focus();
-                        valid = false;
-                        return false;
+            function validateStep(step) {
+                const fields = $('#wizard-step-' + step + ' :input[required]:enabled').toArray();
+                const invalidField = fields.find(function(field) {
+                    return !field.checkValidity();
+                });
+
+                if (invalidField) {
+                    invalidField.reportValidity();
+                    return false;
+                }
+
+                return true;
+            }
+
+            function setEnrollmentType(type) {
+                enrollmentType = type;
+                $('#enrollment-message').addClass('d-none').text('');
+                $('#returning-student-summary').addClass('d-none').text('');
+                $('#enrollmentForm').removeClass('d-none');
+
+                if (type === 'returning') {
+                    $('#btn-returning-enrollment').removeClass('btn-outline-primary').addClass('btn-rics-primary');
+                    $('#btn-new-enrollment').removeClass('btn-rics-primary').addClass('btn-outline-primary');
+                    $('#enrollment-title').text('Returning Student Re-enrollment');
+                    $('#enrollment-subtitle').text('Sign in with your existing student account and choose your grade level for this school year.');
+                    $('#enrollment-type-help').text('Your previous enrollment and payment history will remain unchanged. Your LRN can be used once per school year.');
+                    $('#wizard-step-1 :input').prop('disabled', true);
+                    $('#reg_lrn').prop('disabled', false).prop('readonly', true);
+                    $('#wizard-step-2 :input').prop('disabled', true);
+                    $('#wizard-step-3 :input').prop('disabled', false);
+                    $('#wizard-step-4 :input').prop('disabled', true);
+                    $('#wizard-step-1, #wizard-step-2, #wizard-step-4').addClass('d-none');
+                    $('#wizard-step-3').removeClass('d-none');
+                    $('#returning-grade-group').removeClass('d-none');
+                    $returningGradeSelect.prop('disabled', false);
+                    $('.step-pill').addClass('d-none').removeClass('active');
+                    $('#step-ind-3').removeClass('d-none').addClass('active');
+                    $('#payment-back-button').addClass('d-none');
+                    $('#payment-next-button').removeClass('btn-next').removeAttr('data-step').attr('type', 'submit').text('Submit Re-enrollment');
+                } else {
+                    $('#btn-new-enrollment').removeClass('btn-outline-primary').addClass('btn-rics-primary');
+                    $('#btn-returning-enrollment').removeClass('btn-rics-primary').addClass('btn-outline-primary');
+                    $('#enrollment-title').text('Enrollment Application');
+                    $('#enrollment-subtitle').text('Sections are automatically assigned (1 Section per level, max 30 slots)');
+                    $('#enrollment-type-help').text('New students create a portal account. Returning students sign in to reuse their existing account and LRN.');
+                    $('#wizard-step-1 :input, #wizard-step-2 :input, #wizard-step-4 :input').prop('disabled', false);
+                    $('#reg_lrn').prop('readonly', false);
+                    $('#returning-grade-group').addClass('d-none');
+                    $returningGradeSelect.prop('disabled', true).val('');
+                    $('#payment-back-button').removeClass('d-none');
+                    $('#payment-next-button').attr('type', 'button').addClass('btn-next').attr('data-step', '4').text('Next →');
+                    $('.step-pill').removeClass('d-none');
+                    goToStep(1);
+                }
+            }
+
+            function loadReturningStudent() {
+                $.getJSON('api.php?action=get_portal_data', function(res) {
+                    if (!res.success || !res.data) {
+                        $('#enrollmentForm').addClass('d-none');
+                        $('#enrollment-message').removeClass('d-none').text(res.message || 'No previous student enrollment was found for this account.');
+                        return;
+                    }
+
+                    if (res.has_current_enrollment) {
+                        $('#enrollmentForm').addClass('d-none');
+                        $('#enrollment-message').removeClass('d-none').text('This account already has an enrollment for ' + res.current_school_year + '. Sign in to the student portal to view it.');
+                        return;
+                    }
+
+                    const student = res.data;
+                    $('#reg_lrn').val(student.lrn);
+                    $('#returning-student-summary')
+                        .removeClass('d-none')
+                        .text('Signed in as the account for ' + student.first_name + ' ' + student.last_name +
+                            '. Previous enrollment: ' + student.school_year + ' (' + student.level_name + '). Choose the grade level for ' +
+                            res.current_school_year + ' below.');
+                }).fail(function(jqXHR) {
+                    if (jqXHR.status === 401 || jqXHR.status === 403) {
+                        $('#enrollmentForm').addClass('d-none');
+                        $('#enrollment-message').removeClass('d-none').text('Please sign in with your student account to continue re-enrollment.');
                     }
                 });
-                if (valid) goToStep(2);
+            }
+
+            $('#btn-new-enrollment').on('click', function() {
+                setEnrollmentType('new');
+            });
+
+            $('#btn-returning-enrollment').on('click', function() {
+                setEnrollmentType('returning');
+                $.getJSON('api.php?action=check_session', function(session) {
+                    if (!session.logged_in) {
+                        $('#loginModal').modal('show');
+                    } else if (session.role !== 'student') {
+                        $('#enrollmentForm').addClass('d-none');
+                        $('#enrollment-message').removeClass('d-none').text('Returning-student enrollment requires a student account. Please sign out of the staff account first.');
+                    } else {
+                        loadReturningStudent();
+                    }
+                });
+            });
+
+            if (new URLSearchParams(window.location.search).get('type') === 'returning') {
+                $('#btn-returning-enrollment').trigger('click');
+            }
+
+            // Step 1 Validation
+            $('#btn-next-2').on('click', function() {
+                if (validateStep(1)) goToStep(2);
             });
 
             // Standard Step Buttons
-            $('.btn-next').on('click', function() { goToStep($(this).data('step')); });
+            $('.btn-next').on('click', function() {
+                const currentStep = Number($(this).closest('[id^="wizard-step-"]').attr('id').replace('wizard-step-', ''));
+                if (validateStep(currentStep)) {
+                    goToStep($(this).data('step'));
+                }
+            });
             $('.btn-back').on('click', function() { goToStep($(this).data('step')); });
 
             // Payment Scheme Update
@@ -357,12 +485,15 @@
             $('#enrollmentForm').on('submit', function(e) {
                 e.preventDefault();
                 const payload = {
+                    enrollment_type: enrollmentType,
                     first_name: $('#reg_first_name').val().trim(),
                     middle_name: $('#reg_middle_name').val().trim(),
                     last_name: $('#reg_last_name').val().trim(),
                     nickname: $('#reg_nickname').val().trim(),
                     lrn: $('#reg_lrn').val().trim(),
-                    grade_level_id: $('#reg_grade_level').val(),
+                    grade_level_id: enrollmentType === 'returning'
+                        ? $returningGradeSelect.val()
+                        : $('#reg_grade_level').val(),
                     date_of_birth: $('#reg_dob').val(),
                     place_of_birth: $('#reg_pob').val().trim(),
                     gender: $('#reg_gender').val(),
@@ -393,7 +524,9 @@
                     data: JSON.stringify(payload),
                     success: function(data) {
                         if (data.success) {
-                            alert('Student successfully registered and section assigned! Loading dashboard.');
+                            alert(enrollmentType === 'returning'
+                                ? 'Re-enrollment submitted successfully! Loading your dashboard.'
+                                : 'Student successfully registered and section assigned! Loading dashboard.');
                             window.location.href = 'student-dashboard.html';
                         } else {
                             alert('Registration error: ' + data.message);
@@ -418,7 +551,12 @@
                     }),
                     success: function(data) {
                         if (data.success) {
-                            window.location.href = data.role === 'student' ? 'student-dashboard.html' : 'staff-dashboard.html';
+                            if (enrollmentType === 'returning' && data.role === 'student') {
+                                $('#loginModal').modal('hide');
+                                loadReturningStudent();
+                            } else {
+                                window.location.href = data.role === 'student' ? 'student-dashboard.html' : 'staff-dashboard.html';
+                            }
                         } else {
                             alert(data.message);
                         }

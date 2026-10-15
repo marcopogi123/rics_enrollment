@@ -103,23 +103,111 @@ if ($action === 'logout') {
 // Submit Full Enrollment Wizard with Automatic Section Assignment (Capped at 30)
 if ($action === 'submit_enrollment') {
     $d = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($d)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid enrollment request.']);
+        exit;
+    }
+
+    $enrollmentType = $d['enrollment_type'] ?? 'new';
+    if (!in_array($enrollmentType, ['new', 'returning'], true)) {
+        echo json_encode(['success' => false, 'message' => 'Choose a valid enrollment type.']);
+        exit;
+    }
+    if ($enrollmentType === 'returning') {
+        require_role(['student']);
+    }
+
     $pdo->beginTransaction();
     try {
-        $checkUser = $pdo->prepare("SELECT user_id FROM users WHERE username = ? OR email = ?");
-        $checkUser->execute([$d['username'], $d['email']]);
-        if ($checkUser->fetch()) {
-            throw new Exception("Username or Email already registered. Please choose another.");
+        if ($enrollmentType === 'new') {
+            $checkUser = $pdo->prepare("SELECT user_id FROM users WHERE username = ? OR email = ?");
+            $checkUser->execute([$d['username'] ?? '', $d['email'] ?? '']);
+            if ($checkUser->fetch()) {
+                throw new Exception("Username or Email already registered. Please choose another.");
+            }
+
+            $checkLrn = $pdo->prepare("SELECT student_id FROM students WHERE lrn = ? FOR UPDATE");
+            $checkLrn->execute([$d['lrn'] ?? '']);
+            if ($checkLrn->fetch()) {
+                throw new Exception("This LRN already has an account. Sign in and choose Returning Student Re-enrollment.");
+            }
+
+            $profile = $d;
+            $profile['former_elementary_school'] = $d['former_school'] ?? null;
+            $profile['general_average'] = $d['average'] ?? null;
+            $userId = null;
+        } else {
+            $userId = (int)$_SESSION['user_id'];
+            $existingStmt = $pdo->prepare("
+                SELECT *
+                FROM students
+                WHERE user_id = ? AND lrn = ? AND school_year <> ?
+                ORDER BY school_year DESC, student_id DESC
+                LIMIT 1
+                FOR UPDATE
+            ");
+            $existingStmt->execute([$userId, $d['lrn'] ?? '', CURRENT_SCHOOL_YEAR]);
+            $previousStudent = $existingStmt->fetch();
+            if (!$previousStudent) {
+                throw new Exception("We could not find this LRN on your account. Please check the LRN or contact the school office.");
+            }
+
+            $currentYearStmt = $pdo->prepare("
+                SELECT student_id
+                FROM students
+                WHERE lrn = ? AND school_year = ?
+                FOR UPDATE
+            ");
+            $currentYearStmt->execute([$previousStudent['lrn'], CURRENT_SCHOOL_YEAR]);
+            if ($currentYearStmt->fetch()) {
+                throw new Exception("You already have an enrollment for the current school year.");
+            }
+
+            $parentStmt = $pdo->prepare("
+                SELECT father_name, father_contact, father_occupation, mother_name, mother_contact,
+                       mother_occupation, emergency_contact_name, emergency_contact_number,
+                       emergency_relationship, emergency_address
+                FROM parent_emergency_info
+                WHERE student_id = ?
+            ");
+            $parentStmt->execute([$previousStudent['student_id']]);
+            $parentInfo = $parentStmt->fetch();
+            if (!$parentInfo) {
+                throw new Exception("Your previous enrollment is missing emergency contact information. Please contact the school office.");
+            }
+
+            $medicalStmt = $pdo->prepare("
+                SELECT illnesses, allergies, surgical_operations, allowed_medications, opt_out_otc,
+                       signature_name, signature_relation
+                FROM medical_records
+                WHERE student_id = ?
+            ");
+            $medicalStmt->execute([$previousStudent['student_id']]);
+            $medicalInfo = $medicalStmt->fetch();
+            if (!$medicalInfo) {
+                throw new Exception("Your previous enrollment is missing medical information. Please contact the school office.");
+            }
+
+            $profile = $previousStudent;
+            $profile['grade_level_id'] = $d['grade_level_id'] ?? '';
         }
 
-        $checkLrn = $pdo->prepare("SELECT student_id FROM students WHERE lrn = ?");
-        $checkLrn->execute([$d['lrn']]);
-        if ($checkLrn->fetch()) {
-            throw new Exception("LRN already exists in the system.");
+        if (empty($d['lrn']) || !preg_match('/^\d{12}$/', (string)$d['lrn'])) {
+            throw new Exception("Enter a valid 12-digit LRN.");
+        }
+        if (empty($d['grade_level_id'])) {
+            throw new Exception("Choose a grade level.");
+        }
+        if (!in_array($d['payment_scheme'] ?? '', ['Annually', 'Semi-Annually', 'Quarterly', 'Monthly'], true)) {
+            throw new Exception("Choose a valid payment scheme.");
+        }
+        if (!in_array($d['payment_method'] ?? '', ['Cash', 'GCash'], true)) {
+            throw new Exception("Choose Cash or GCash as the payment method.");
         }
 
         // Automatic section lookup: 1 section per level, maximum 30 students
-        $secStmt = $pdo->prepare("SELECT section_id, section_name, current_slots FROM sections WHERE grade_level_id = ? LIMIT 1 FOR UPDATE");
-        $secStmt->execute([$d['grade_level_id']]);
+        $secStmt = $pdo->prepare("SELECT section_id, section_name, current_slots FROM sections WHERE grade_level_id = ? AND school_year = ? LIMIT 1 FOR UPDATE");
+        $secStmt->execute([$profile['grade_level_id'], CURRENT_SCHOOL_YEAR]);
         $assignedSection = $secStmt->fetch();
 
         if (!$assignedSection) {
@@ -131,35 +219,60 @@ if ($action === 'submit_enrollment') {
 
         $sectionId = $assignedSection['section_id'];
 
-        // Create Portal User
-        $pwdHash = password_hash($d['password'], PASSWORD_BCRYPT);
-        $uStmt = $pdo->prepare("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, 'student')");
-        $uStmt->execute([$d['username'], $d['email'], $pwdHash]);
-        $newUserId = $pdo->lastInsertId();
+        if ($enrollmentType === 'new') {
+            if (empty($d['username']) || empty($d['email']) || strlen($d['password'] ?? '') < 6) {
+                throw new Exception("Enter a username, valid email, and password of at least 6 characters.");
+            }
 
-        // Create Student Profile with Religion
+            // Create Portal User
+            $pwdHash = password_hash($d['password'], PASSWORD_BCRYPT);
+            $uStmt = $pdo->prepare("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, 'student')");
+            $uStmt->execute([$d['username'], $d['email'], $pwdHash]);
+            $userId = (int)$pdo->lastInsertId();
+        }
+
         $sStmt = $pdo->prepare("INSERT INTO students 
             (user_id, lrn, school_year, date_of_registration, grade_level_id, section_id, last_name, first_name, middle_name, nickname, date_of_birth, place_of_birth, gender, religion, contact_no, present_address, is_transferee, former_elementary_school, general_average, enrollment_status)
             VALUES (?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Payment Verification')");
         $sStmt->execute([
-            $newUserId, $d['lrn'], CURRENT_SCHOOL_YEAR, $d['grade_level_id'], $sectionId, $d['last_name'], $d['first_name'],
-            $d['middle_name'], $d['nickname'], $d['date_of_birth'], $d['place_of_birth'],
-            $d['gender'], $d['religion'], $d['contact_no'], $d['present_address'],
-            $d['is_transferee'], $d['former_school'], $d['average']
+            $userId, $d['lrn'], CURRENT_SCHOOL_YEAR, $profile['grade_level_id'], $sectionId, $profile['last_name'], $profile['first_name'],
+            $profile['middle_name'], $profile['nickname'], $profile['date_of_birth'], $profile['place_of_birth'],
+            $profile['gender'], $profile['religion'], $profile['contact_no'], $profile['present_address'],
+            $enrollmentType === 'returning' ? 'No' : ($d['is_transferee'] ?? 'No'),
+            $profile['former_elementary_school'], $profile['general_average']
         ]);
         $studentId = $pdo->lastInsertId();
 
-        // Emergency Information
-        $pStmt = $pdo->prepare("INSERT INTO parent_emergency_info 
-            (student_id, emergency_contact_name, emergency_contact_number, emergency_relationship, emergency_address)
-            VALUES (?, ?, ?, ?, ?)");
-        $pStmt->execute([$studentId, $d['emer_name'], $d['emer_contact'], $d['emer_rel'], $d['emer_address']]);
+        if ($enrollmentType === 'returning') {
+            $pStmt = $pdo->prepare("
+                INSERT INTO parent_emergency_info
+                    (student_id, father_name, father_contact, father_occupation, mother_name, mother_contact,
+                     mother_occupation, emergency_contact_name, emergency_contact_number,
+                     emergency_relationship, emergency_address)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            $pStmt->execute(array_merge([$studentId], array_values($parentInfo)));
 
-        // Medical Details
-        $mStmt = $pdo->prepare("INSERT INTO medical_records 
-            (student_id, illnesses, allergies, allowed_medications, opt_out_otc, signature_name, signature_relation)
-            VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $mStmt->execute([$studentId, $d['illnesses'], $d['allergies'], json_encode($d['allowed_meds']), 0, $d['emer_name'], $d['emer_rel']]);
+            $mStmt = $pdo->prepare("
+                INSERT INTO medical_records
+                    (student_id, illnesses, allergies, surgical_operations, allowed_medications,
+                     opt_out_otc, signature_name, signature_relation)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            $mStmt->execute(array_merge([$studentId], array_values($medicalInfo)));
+        } else {
+            // Emergency Information
+            $pStmt = $pdo->prepare("INSERT INTO parent_emergency_info
+                (student_id, emergency_contact_name, emergency_contact_number, emergency_relationship, emergency_address)
+                VALUES (?, ?, ?, ?, ?)");
+            $pStmt->execute([$studentId, $d['emer_name'], $d['emer_contact'], $d['emer_rel'], $d['emer_address']]);
+
+            // Medical Details
+            $mStmt = $pdo->prepare("INSERT INTO medical_records
+                (student_id, illnesses, allergies, allowed_medications, opt_out_otc, signature_name, signature_relation)
+                VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $mStmt->execute([$studentId, $d['illnesses'], $d['allergies'], json_encode($d['allowed_meds'] ?? []), 0, $d['emer_name'], $d['emer_rel']]);
+        }
 
         // Requirements Checklist for Registrar
         $docs = ['Birth Certificate', 'Form 137', 'Good Moral', 'Report Card', 'ESC Certificate'];
@@ -175,7 +288,7 @@ if ($action === 'submit_enrollment') {
             'Quarterly' => 46480.50,
             'Monthly' => 47367.00
         ];
-        $totalAmount = $schemes[$d['payment_scheme']] ?? 45000.00;
+        $totalAmount = $schemes[$d['payment_scheme']];
 
         $payStmt = $pdo->prepare("INSERT INTO payment_records (student_id, payment_scheme, payment_method, total_amount, balance, payment_status) VALUES (?, ?, ?, ?, ?, 'Pending Official Receipt')");
         $payStmt->execute([$studentId, $d['payment_scheme'], $d['payment_method'], $totalAmount, $totalAmount]);
@@ -183,9 +296,11 @@ if ($action === 'submit_enrollment') {
         $pdo->commit();
 
         session_regenerate_id(true);
-        $_SESSION['user_id'] = $newUserId;
+        $_SESSION['user_id'] = $userId;
         $_SESSION['role'] = 'student';
-        $_SESSION['username'] = $d['username'];
+        if ($enrollmentType === 'new') {
+            $_SESSION['username'] = $d['username'];
+        }
 
         echo json_encode(['success' => true, 'student_id' => $studentId]);
     } catch (Exception $e) {
@@ -207,15 +322,23 @@ if ($action === 'get_portal_data') {
         LEFT JOIN sections sec ON s.section_id = sec.section_id
         LEFT JOIN payment_records p ON s.student_id = p.student_id
         WHERE s.user_id = ?
+        ORDER BY (s.school_year = ?) DESC, s.school_year DESC, s.student_id DESC
+        LIMIT 1
     ");
-    $stmt->execute([$uid]);
+    $stmt->execute([$uid, CURRENT_SCHOOL_YEAR]);
     $student = $stmt->fetch();
 
     if ($student) {
         $docStmt = $pdo->prepare("SELECT doc_type, status FROM submitted_documents WHERE student_id = ?");
         $docStmt->execute([$student['student_id']]);
         $student['documents'] = $docStmt->fetchAll();
-        echo json_encode(['success' => true, 'data' => $student]);
+        $hasCurrentEnrollment = $student['school_year'] === CURRENT_SCHOOL_YEAR;
+        echo json_encode([
+            'success' => true,
+            'data' => $student,
+            'has_current_enrollment' => $hasCurrentEnrollment,
+            'current_school_year' => CURRENT_SCHOOL_YEAR
+        ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'No active student record found.']);
     }
@@ -234,8 +357,10 @@ if ($action === 'get_my_payment_records') {
         FROM students s
         LEFT JOIN payment_records p ON s.student_id = p.student_id
         WHERE s.user_id = ?
+        ORDER BY (s.school_year = ?) DESC, s.school_year DESC, s.student_id DESC
+        LIMIT 1
     ");
-    $stmt->execute([$_SESSION['user_id']]);
+    $stmt->execute([$_SESSION['user_id'], CURRENT_SCHOOL_YEAR]);
     $summary = $stmt->fetch();
 
     if (!$summary) {
@@ -583,23 +708,41 @@ if ($action === 'reserve_student_slot') {
 if ($action === 'get_payment_analytics') {
     require_role(['cashier', 'admin']);
 
-    // 1. Payments This Week
-    $wStmt = $pdo->query("SELECT COALESCE(SUM(amount_paid), 0) as rev_week, COUNT(*) as count_week 
-                          FROM payment_transactions 
-                          WHERE YEARWEEK(payment_timestamp, 1) = YEARWEEK(CURDATE(), 1)");
+    // 1. Payments This Week for the active school year
+    $wStmt = $pdo->prepare("
+        SELECT COALESCE(SUM(pt.amount_paid), 0) AS rev_week, COUNT(*) AS count_week
+        FROM payment_transactions pt
+        JOIN students s ON pt.student_id = s.student_id
+        WHERE s.school_year = ?
+          AND YEARWEEK(pt.payment_timestamp, 1) = YEARWEEK(CURDATE(), 1)
+    ");
+    $wStmt->execute([CURRENT_SCHOOL_YEAR]);
     $weekData = $wStmt->fetch();
 
-    // 2. Payments This Month
-    $mStmt = $pdo->query("SELECT COALESCE(SUM(amount_paid), 0) as rev_month, COUNT(*) as count_month 
-                          FROM payment_transactions 
-                          WHERE MONTH(payment_timestamp) = MONTH(CURDATE()) AND YEAR(payment_timestamp) = YEAR(CURDATE())");
+    // 2. Payments This Month for the active school year
+    $mStmt = $pdo->prepare("
+        SELECT COALESCE(SUM(pt.amount_paid), 0) AS rev_month, COUNT(*) AS count_month
+        FROM payment_transactions pt
+        JOIN students s ON pt.student_id = s.student_id
+        WHERE s.school_year = ?
+          AND MONTH(pt.payment_timestamp) = MONTH(CURDATE())
+          AND YEAR(pt.payment_timestamp) = YEAR(CURDATE())
+    ");
+    $mStmt->execute([CURRENT_SCHOOL_YEAR]);
     $monthData = $mStmt->fetch();
 
-    // 3. Receivables & enrollee counts
-    $bStmt = $pdo->query("SELECT COALESCE(SUM(balance), 0) as total_balance FROM payment_records");
+    // 3. Receivables & enrollee counts for the active school year
+    $bStmt = $pdo->prepare("
+        SELECT COALESCE(SUM(p.balance), 0) AS total_balance
+        FROM payment_records p
+        JOIN students s ON p.student_id = s.student_id
+        WHERE s.school_year = ?
+    ");
+    $bStmt->execute([CURRENT_SCHOOL_YEAR]);
     $totBal = $bStmt->fetchColumn();
 
-    $eStmt = $pdo->query("SELECT COUNT(*) FROM students WHERE enrollment_status <> 'Withdrawn'");
+    $eStmt = $pdo->prepare("SELECT COUNT(*) FROM students WHERE school_year = ? AND enrollment_status <> 'Withdrawn'");
+    $eStmt->execute([CURRENT_SCHOOL_YEAR]);
     $totEnrollees = $eStmt->fetchColumn();
 
     $newStudentsStmt = $pdo->prepare("
@@ -638,19 +781,22 @@ if ($action === 'get_payment_history') {
         JOIN students s ON pt.student_id = s.student_id
         JOIN grade_levels g ON s.grade_level_id = g.grade_level_id
         LEFT JOIN users u ON pt.collected_by = u.user_id
+        WHERE s.school_year = ?
     ";
+    $params = [CURRENT_SCHOOL_YEAR];
 
     if ($timeframe === 'today') {
-        $sql .= " WHERE DATE(pt.payment_timestamp) = CURDATE() ";
+        $sql .= " AND DATE(pt.payment_timestamp) = CURDATE() ";
     } elseif ($timeframe === 'week') {
-        $sql .= " WHERE YEARWEEK(pt.payment_timestamp, 1) = YEARWEEK(CURDATE(), 1) ";
+        $sql .= " AND YEARWEEK(pt.payment_timestamp, 1) = YEARWEEK(CURDATE(), 1) ";
     } elseif ($timeframe === 'month') {
-        $sql .= " WHERE MONTH(pt.payment_timestamp) = MONTH(CURDATE()) AND YEAR(pt.payment_timestamp) = YEAR(CURDATE()) ";
+        $sql .= " AND MONTH(pt.payment_timestamp) = MONTH(CURDATE()) AND YEAR(pt.payment_timestamp) = YEAR(CURDATE()) ";
     }
 
     $sql .= " ORDER BY pt.transaction_id DESC";
 
-    $stmt = $pdo->query($sql);
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     echo json_encode(['success' => true, 'history' => $stmt->fetchAll()]);
     exit;
 }

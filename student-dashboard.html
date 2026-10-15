@@ -17,7 +17,7 @@
                     <img src="rics-logo.png" alt="RICS Seal" style="height: 60px; width: 60px; object-fit: contain; margin-right: 15px;">
                     <div>
                         <h4 class="font-weight-bold mb-0 text-navy">REDEEMED IN CHRIST SCHOOL</h4>
-                        <small class="text-muted">Student & Parent Portal (SY 2026-2027)</small>
+                        <small class="text-muted">Student & Parent Portal (SY <span id="portal-school-year">Loading</span>)</small>
                     </div>
                 </div>
                 <button class="btn btn-outline-danger btn-sm" id="btn-logout">Sign Out</button>
@@ -31,6 +31,13 @@
                 </div>
                 <div>
                     Payment Status: <span class="badge badge-status badge-pending" id="portal-payment-status">Pending Official Receipt</span>
+                </div>
+            </div>
+
+            <div class="alert alert-info d-none mb-4" id="reenrollment-notice">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <span class="mr-3 mb-2 mb-md-0">Your dashboard is showing your previous school-year record. Re-enroll for <strong id="reenrollment-school-year"></strong> when you are ready.</span>
+                    <a class="btn btn-primary btn-sm" href="enrollment.html?type=returning">Start Re-enrollment</a>
                 </div>
             </div>
 
@@ -340,6 +347,7 @@
                 if (resData.success && resData.data) {
                     const s = resData.data;
                     $('#portal-student-name').text(`${s.first_name} ${s.last_name}`);
+                    $('#portal-school-year').text(s.school_year);
                     $('#portal-section').text(`Section: ${s.section_name || 'Unassigned'} (${s.current_slots}/${s.max_capacity} slots left)`);
                     $('#portal-grade-level').text(`Level: ${s.level_name}`);
                     $('#portal-scheme').text(s.payment_scheme);
@@ -358,6 +366,11 @@
                     $statusBadge.attr('class', `badge badge-status ${s.payment_status === 'Fully Paid' ? 'badge-verified' : 'badge-pending'}`);
                     $('#portal-or-number').text(s.receipt_number || 'Pending Official Receipt');
                     showCurrentInstallment(s.payment_scheme, paid);
+
+                    if (!resData.has_current_enrollment) {
+                        $('#reenrollment-school-year').text(resData.current_school_year);
+                        $('#reenrollment-notice').removeClass('d-none');
+                    }
 
                     // Render Schedule
                     let tier = 'elementary';

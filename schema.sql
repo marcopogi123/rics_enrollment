@@ -21,16 +21,18 @@ CREATE TABLE sections (
     section_id INT AUTO_INCREMENT PRIMARY KEY,
     grade_level_id INT NOT NULL,
     section_name VARCHAR(100) NOT NULL,
+    school_year VARCHAR(20) NOT NULL DEFAULT '2026-2027',
     max_capacity INT NOT NULL DEFAULT 30,
     current_slots INT NOT NULL DEFAULT 30,
     adviser_name VARCHAR(150) NULL,
+    UNIQUE KEY uq_sections_grade_school_year (grade_level_id, school_year),
     FOREIGN KEY (grade_level_id) REFERENCES grade_levels(grade_level_id) ON DELETE CASCADE
 );
 
 CREATE TABLE students (
     student_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    lrn VARCHAR(12) UNIQUE NOT NULL,
+    lrn VARCHAR(12) NOT NULL,
     school_year VARCHAR(20) NOT NULL DEFAULT '2026-2027',
     date_of_registration DATE NOT NULL,
     grade_level_id INT NOT NULL,
@@ -51,6 +53,7 @@ CREATE TABLE students (
     general_average DECIMAL(5,2) NULL,
     enrollment_status ENUM('Pending Review', 'Documents Pending', 'Assessment Pending', 'Payment Verification', 'Officially Enrolled', 'Withdrawn') DEFAULT 'Payment Verification',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_students_lrn_school_year (lrn, school_year),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (grade_level_id) REFERENCES grade_levels(grade_level_id),
     FOREIGN KEY (section_id) REFERENCES sections(section_id) ON DELETE SET NULL
