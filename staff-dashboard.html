@@ -117,12 +117,14 @@
                         <select id="filter_school_year" class="form-control form-control-sm" style="width: 170px;">
                             <option value="CURRENT">Current school year</option>
                         </select>
-                        <label class="small font-weight-bold ml-3 mr-2 mb-0">Enrollment:</label>
-                        <select id="filter_enrollment_status" class="form-control form-control-sm" style="width: 190px;">
-                            <option value="ALL">All statuses</option>
-                            <option value="ENROLLED">Officially enrolled</option>
-                            <option value="NOT_ENROLLED">Not officially enrolled</option>
-                        </select>
+                        <div id="enrollment-status-filter" class="d-flex align-items-center">
+                            <label class="small font-weight-bold ml-3 mr-2 mb-0">Enrollment:</label>
+                            <select id="filter_enrollment_status" class="form-control form-control-sm" style="width: 190px;">
+                                <option value="ALL">All statuses</option>
+                                <option value="ENROLLED">Officially enrolled</option>
+                                <option value="NOT_ENROLLED">Not officially enrolled</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -614,6 +616,9 @@
         // Everything that needs the logged-in role runs from here, after the session is confirmed.
         function initStaffDashboard() {
             $('#staff-role-indicator').text(`Active Role: ${currentRole.toUpperCase()}`);
+            if (currentRole === 'registrar') {
+                $('#enrollment-status-filter').remove();
+            }
             if (currentRole === 'registrar') {
                 $('#analytics-section').addClass('d-none');
             } else {

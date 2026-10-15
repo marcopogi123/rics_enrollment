@@ -299,7 +299,10 @@ if ($action === 'get_admin_records') {
         $params[] = $schoolYear;
     }
 
-    if ($enrollmentStatus === 'ENROLLED') {
+    if ($_SESSION['role'] === 'registrar') {
+        $sql .= " AND s.enrollment_status = ? ";
+        $params[] = 'Officially Enrolled';
+    } elseif ($enrollmentStatus === 'ENROLLED') {
         $sql .= " AND s.enrollment_status = ? ";
         $params[] = 'Officially Enrolled';
     } elseif ($enrollmentStatus === 'NOT_ENROLLED') {
@@ -313,7 +316,7 @@ if ($action === 'get_admin_records') {
         $params[] = $gradeLevel;
     }
 
-    $sql .= " ORDER BY s.student_id DESC";
+    $sql .= " ORDER BY s.last_name ASC, s.first_name ASC, s.student_id ASC";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
