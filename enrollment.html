@@ -307,7 +307,7 @@
             let enrollmentType = 'new';
             const $returningGradeSelect = $('#reg_grade_level').clone()
                 .attr('id', 'returning_grade_level')
-                .prop('disabled', false)
+                .prop('disabled', true)
                 .prop('required', true)
                 .val('');
             $('#returning-grade-select').append($returningGradeSelect);
@@ -317,8 +317,9 @@
                 $('[id^="wizard-step-"]').addClass('d-none');
                 $('[id^="wizard-step-"] :input').prop('disabled', true);
                 $('.step-pill').removeClass('active');
-                $('#wizard-step-' + step).removeClass('d-none');
-                $('#wizard-step-' + step + ' :input').prop('disabled', false);
+                const $step = $('#wizard-step-' + step).removeClass('d-none');
+                $step.find(':input').prop('disabled', false);
+                $step.find('.d-none :input').prop('disabled', true);
                 for (let j = 1; j <= step; j++) {
                     $('#step-ind-' + j).addClass('active');
                 }
@@ -427,6 +428,8 @@
                 });
             });
 
+            goToStep(1);
+
             if (new URLSearchParams(window.location.search).get('type') === 'returning') {
                 $('#btn-returning-enrollment').trigger('click');
             }
@@ -437,10 +440,19 @@
             });
 
             // Standard Step Buttons
-            $('.btn-next').on('click', function() {
-                const currentStep = Number($(this).closest('[id^="wizard-step-"]').attr('id').replace('wizard-step-', ''));
+            $('#enrollmentForm').on('click', '.btn-next', function(e) {
+                e.preventDefault();
+                const currentStepElement = $(this).closest('[id^="wizard-step-"]');
+                const nextStep = Number($(this).data('step'));
+
+                if (!currentStepElement.length || !Number.isInteger(nextStep)) {
+                    alert('Could not determine the next enrollment step. Please refresh the page and try again.');
+                    return;
+                }
+
+                const currentStep = Number(currentStepElement.attr('id').replace('wizard-step-', ''));
                 if (validateStep(currentStep)) {
-                    goToStep($(this).data('step'));
+                    goToStep(nextStep);
                 }
             });
             $('.btn-back').on('click', function() { goToStep($(this).data('step')); });
