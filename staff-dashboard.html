@@ -953,6 +953,9 @@
 
             // Logout
             $('#btn-logout').on('click', function() {
+                if(!confirm('Do you want to sign out?')){
+                    return;
+                }
                 $.get('api.php?action=logout', function() {
                     window.location.href = 'index.html';
                 });
