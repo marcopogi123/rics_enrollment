@@ -352,7 +352,6 @@
                     $('#enrollment-subtitle').text('Sign in with your existing student account and choose your grade level for this school year.');
                     $('#enrollment-type-help').text('Your previous enrollment and payment history will remain unchanged. Your LRN can be used once per school year.');
                     $('#wizard-step-1 :input').prop('disabled', true);
-                    $('#reg_lrn').prop('disabled', false).prop('readonly', true);
                     $('#wizard-step-2 :input').prop('disabled', true);
                     $('#wizard-step-3 :input').prop('disabled', false);
                     $('#wizard-step-4 :input').prop('disabled', true);
@@ -496,6 +495,12 @@
             // Submit Enrollment
             $('#enrollmentForm').on('submit', function(e) {
                 e.preventDefault();
+                const finalStep = enrollmentType === 'returning' ? 3 : 4;
+                if ($('#wizard-step-' + finalStep).hasClass('d-none')) {
+                    alert('Please complete each enrollment step using the Next button before submitting.');
+                    return;
+                }
+
                 const payload = {
                     enrollment_type: enrollmentType,
                     first_name: $('#reg_first_name').val().trim(),
